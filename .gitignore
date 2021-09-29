@@ -7,8 +7,12 @@ yarn-error.log*
 
 
 # Sheets API
-credentials.json
-token..json
+sheets/config.json
+sheets/token.json
+sheets/credentials.json
+
+# Discord API
+discord/config.json
 
 # Runtime data
 pids
