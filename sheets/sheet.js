@@ -1,51 +1,118 @@
 const fs = require("fs");
 const readline = require("readline");
 const { google } = require("googleapis");
-const { master_sheet_id } = require("./config.json");
+const { MASTER_SHEET_ID } = require("./config.json");
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const TOKEN_PATH = "sheets/token.json";
+const CREDENTIALS_PATH = "sheets/credentials.json";
 
-let oAuth2Client = null;
+class SpreadSheet {
+  constructor(oAuth2Client, sheetID) {
+    this._oAuth2Client = oAuth2Client;
+    this._sheetID = sheetID;
+  }
 
-// Sheet initialization
+  getSheet() {
+    return google.sheets({ version: "v4", auth: this._oAuth2Client });
+  }
 
-// Load client secrets from a local file.
-fs.readFile("sheets/credentials.json", (err, content) => {
-  if (err) return console.log("Error loading client secret file:", err);
-  // Authorize a client with credentials, then call the Google Sheets API.
-  authorize(JSON.parse(content));
-});
+  getSheetValues() {
+    return this.getSheet().spreadsheets.values;
+  }
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
+  async findOne({ range }, searchIndex, searchValue) {
+    console.log(range, searchIndex, searchValue);
+    const response = await this.getSheetValues().get({
+      spreadsheetId: this._sheetID,
+      range: range,
+    });
+
+    // If sheet is empty, there will be no values
+    if (!response.data.hasOwnProperty("values")) return null;
+
+    const {
+      data: { values: table },
+    } = response;
+
+    const mappedArray = table.map((row, index) => {
+      return {
+        index: index,
+        row: row,
+        searchValue: row[searchIndex].toLowerCase(),
+      };
+    });
+
+    const databaseRow =
+      mappedArray.find((rowObj) => rowObj.searchValue === searchValue) ?? null;
+
+    if (databaseRow === null) {
+      console.log(
+        `Could not find ${searchValue} using index: ${searchIndex} from range: ${range}`
+      );
+      return null;
+    }
+
+    return databaseRow;
+  }
+
+  findMany() {}
+
+  listOne() {}
+
+  async listMany({ range }) {
+    try {
+      const response = await this.getSheetValues().get({
+        spreadsheetId: this._sheetID,
+        range: range,
+      });
+      return response.data.values;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async write({ range }, valueArray) {
+    await this.getSheetValues().append({
+      spreadsheetId: this._sheetID,
+      range: range,
+      valueInputOption: "USER_ENTERED",
+      resource: {
+        values: [valueArray],
+      },
+    });
+  }
+}
+
+const auth = getAuth();
+
+function getAuth() {
+  if (!fs.existsSync(CREDENTIALS_PATH)) {
+    console.log("Error loading client secret file:");
+    return null;
+  }
+  const credentials = fs.readFileSync(CREDENTIALS_PATH);
+  return authorize(JSON.parse(credentials));
+}
 
 function authorize(credentials) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
-  oAuth2Client = new google.auth.OAuth2(
+  const oAuth2Client = new google.auth.OAuth2(
     client_id,
     client_secret,
     redirect_uris[0]
   );
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client);
-    oAuth2Client.setCredentials(JSON.parse(token));
-  });
+  if (!fs.existsSync(TOKEN_PATH)) return getNewToken(oAuth2Client);
+
+  const token = fs.readFileSync(TOKEN_PATH);
+  oAuth2Client.setCredentials(JSON.parse(token));
+
+  return oAuth2Client;
 }
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
 function getNewToken(oAuth2Client) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
@@ -74,47 +141,9 @@ function getNewToken(oAuth2Client) {
   });
 }
 
-// Sheet Obj
+// Spreadsheets
+const MasterSheet = new SpreadSheet(auth, MASTER_SHEET_ID);
 
-const Sheet = {
-  getSheet() {
-    return google.sheets({ version: "v4", auth: oAuth2Client });
-  },
-
-  list() {
-    this.getSheet().spreadsheets.values.get(
-      {
-        spreadsheetId: master_sheet_id,
-        range: "Sheet1!A1:B4",
-      },
-
-      (err, res) => {
-        if (err) return console.log("The API returned an error: " + err);
-        const rows = res.data.values;
-        if (rows.length) {
-          console.log(rows);
-          console.log("hey LIST WORKED");
-          // Print columns A and E, which correspond to indices 0 and 4.
-          // rows.map((row) => {
-          //   console.log(`${row[0]}, ${row[4]}`);
-          // });
-        } else {
-          console.log("No data found.");
-        }
-      }
-    );
-  },
-
-  write(data) {
-    this.getSheet().spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: "Sheet1!F:G",
-      valueInputOption: "USER_ENTERED",
-      resource: {
-        values: [["hey lol", "whats goodie!"]],
-      },
-    });
-  },
+module.exports = {
+  MasterSheet,
 };
-
-module.exports = Sheet;
