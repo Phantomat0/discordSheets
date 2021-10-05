@@ -57,7 +57,7 @@ class SpreadSheet {
     return databaseRow;
   }
 
-  findMany() {}
+  findMany({ range }, searchIndex, searchValue) {}
 
   listOne() {}
 
@@ -67,9 +67,25 @@ class SpreadSheet {
         spreadsheetId: this._sheetID,
         range: range,
       });
-      return response.data.values;
+      const values = response.data.values;
+
+      // Response values are empty
+      if (values.length === 0) return null;
+
+      const [tableHeaders, ...tableData] = values;
+
+      // Format the tableData as an array of objects, with tableHeaders as the keys for each object
+      const mappedData = tableData.map((player) => {
+        return player.reduce((acc, val, index) => {
+          acc[tableHeaders[index]] = val;
+          return acc;
+        }, {});
+      });
+
+      return mappedData;
     } catch (err) {
       console.error(err);
+      return null;
     }
   }
 
