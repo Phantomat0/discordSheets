@@ -3,13 +3,13 @@ const RegistrationManager = require("./registration");
 
 const SHEET_TABLES = {
   PLAYERS: {
-    range: "players!A2:E",
+    range: "players!A1:E",
   },
   PLAYERS_DISCORD: {
-    range: "players_discord!A2:D",
+    range: "players_discord!A1:D",
   },
   PLAYERS_SIGNUP: {
-    range: "players_signup!A2:F",
+    range: "players_signup!A1:F",
   },
 };
 
@@ -28,8 +28,13 @@ class MasterSheetManager {
   }
 
   async getPlayers() {
-    const x = await this._sheet.listMany(this._sheetTables.PLAYERS);
-    return x;
+    return await this._sheet.listMany(this._sheetTables.PLAYERS);
+  }
+
+  async getPlayersByTeam(teamID) {
+    return await this._sheet.findMany(this._sheetTables.PLAYERS, {
+      current_team_id: teamID,
+    });
   }
 
   async getPlayerByDiscordID(id) {

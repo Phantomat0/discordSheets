@@ -22,42 +22,64 @@ class SpreadSheet {
     return this.getSheet().spreadsheets.values;
   }
 
-  async findOne({ range }, searchIndex, searchValue) {
-    console.log(range, searchIndex, searchValue);
-    const response = await this.getSheetValues().get({
-      spreadsheetId: this._sheetID,
-      range: range,
-    });
+  async findOne({ range }, filterQueryObj) {
+    const filteredData = await this.findMany({ range }, filterQueryObj);
 
-    // If sheet is empty, there will be no values
-    if (!response.data.hasOwnProperty("values")) return null;
+    if (filteredData === null) return null;
 
-    const {
-      data: { values: table },
-    } = response;
-
-    const mappedArray = table.map((row, index) => {
-      return {
-        index: index,
-        row: row,
-        searchValue: row[searchIndex].toLowerCase(),
-      };
-    });
-
-    const databaseRow =
-      mappedArray.find((rowObj) => rowObj.searchValue === searchValue) ?? null;
-
-    if (databaseRow === null) {
-      console.log(
-        `Could not find ${searchValue} using index: ${searchIndex} from range: ${range}`
+    // Warn the user if the query returns multiple results, which is not the intended usage of findOne
+    if (filteredData.length > 1) {
+      const filterParamsStr = Object.entries(filterQueryObj)
+        .map(([key, value]) => {
+          return `${key}: ${value}`;
+        })
+        .join(", ");
+      console.warn(
+        `findOne returned ${filteredData.length} results, when using queries: ${filterParamsStr}. Try using findMany() when querying for multiple results`
       );
-      return null;
     }
 
-    return databaseRow;
+    // Return the first
+    return filteredData[0];
   }
 
-  findMany({ range }, searchIndex, searchValue) {}
+  async findMany({ range }, filterQueryObj) {
+    const dataArray = await this.listMany({ range });
+
+    try {
+      if (dataArray === null)
+        throw {
+          type: "Filter Error",
+          message: "Response returned null",
+        };
+
+      // Check to see if every filter criteria is a valid key in object
+      const invalidFilterQuery =
+        Object.keys(filterQueryObj).find((key) => {
+          return !dataArray[0].hasOwnProperty(key);
+        }) ?? null;
+
+      if (invalidFilterQuery !== null)
+        throw {
+          type: "Filter Error",
+          message: `Invalid filter query ${invalidFilterQuery}`,
+        };
+    } catch (error) {
+      if (error?.type === "Filter Error") {
+        console.error(`Filter Error: ${error.message}`);
+        return null;
+      }
+    }
+
+    const filteredData = dataArray.filter((dataObj) => {
+      return Object.entries(filterQueryObj).every(([key, value]) => {
+        // Google sheets API always returns strings, so only ==
+        return dataObj[key] == value;
+      });
+    });
+
+    return filteredData;
+  }
 
   listOne() {}
 
@@ -69,8 +91,8 @@ class SpreadSheet {
       });
       const values = response.data.values;
 
-      // Response values are empty
-      if (values.length === 0) return null;
+      // Response values are empty, only tableHeaders
+      if (values.length === 1) return [];
 
       const [tableHeaders, ...tableData] = values;
 

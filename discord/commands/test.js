@@ -1,24 +1,16 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const Sheet = require("../../sheets/sheet");
+const mainDatabase = require("../../database/main/main");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("test")
-    .setDescription("Test Database")
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName("user")
-        .setDescription("Info about a user")
-        .addUserOption((option) =>
-          option.setName("target").setDescription("The user")
-        )
-    )
-    .addSubcommand((subcommand) =>
-      subcommand.setName("server").setDescription("Info about the server")
-    ),
+    .setDescription("Test Database"),
   async execute(interaction) {
-    console.log(interaction);
-    Sheet.list();
+    // const players = mainDatabase.getPlayersFromTeam(1);
+    // console.log(players);
+
+    const x = await mainDatabase.getPlayersByTeam(1);
+    console.log(x, "test");
     interaction.reply("LOL IT WORKED");
   },
 };
