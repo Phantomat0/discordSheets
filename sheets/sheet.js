@@ -1,12 +1,12 @@
 const fs = require("fs");
 const readline = require("readline");
 const { google } = require("googleapis");
-const { MASTER_SHEET_ID } = require("./config.json");
+const { MASTER_SHEET_ID } = require("./config/sheet-ids");
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const TOKEN_PATH = "sheets/token.json";
-const CREDENTIALS_PATH = "sheets/credentials.json";
+const TOKEN_PATH = "sheets/config/token.json";
+const CREDENTIALS_PATH = "sheets/config/credentials.json";
 
 class SpreadSheet {
   constructor(oAuth2Client, sheetID) {
@@ -39,7 +39,7 @@ class SpreadSheet {
       );
     }
 
-    // Return the first
+    // Return the first value
     return filteredData[0];
   }
 
@@ -89,7 +89,9 @@ class SpreadSheet {
         spreadsheetId: this._sheetID,
         range: range,
       });
-      const values = response.data.values;
+      const {
+        data: { values },
+      } = response;
 
       // Response values are empty, only tableHeaders
       if (values.length === 1) return [];
