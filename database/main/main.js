@@ -11,6 +11,9 @@ const SHEET_TABLES = {
   PLAYERS_SIGNUP: {
     range: "players_signup!A1:F",
   },
+  TEAMS: {
+    range: "teams!A1:F",
+  },
 };
 
 class MasterSheetManager {
@@ -29,6 +32,18 @@ class MasterSheetManager {
 
   async getPlayers() {
     return await this._sheet.listMany(this._sheetTables.PLAYERS);
+  }
+
+  async getPlayerByID(playerID) {
+    return await this._sheet.findOne(this._sheetTables.PLAYERS, {
+      player_id: playerID,
+    });
+  }
+
+  async getTeam(teamID) {
+    return await this._sheet.findOne(this._sheetTables.TEAMS, {
+      team_id: teamID,
+    });
   }
 
   async getPlayersByTeam(teamID) {
@@ -66,16 +81,17 @@ class MasterSheetManager {
     return playersArray.length;
   }
 
-  async getDiscordByPlayerID(id) {
-    const discordResponse = await this._sheet.findOne(
+  async getDiscordByPlayerID(discordID) {
+    const discordProfile = await this._sheet.findOne(
       this._sheetTables.PLAYERS_DISCORD,
-      0,
-      id
+      {
+        player_id: discordID,
+      }
     );
 
-    if (discordResponse === null) return null;
+    if (discordProfile === null) return null;
 
-    return discordResponse.row[1];
+    return discordProfile;
   }
 
   async checkIfAlreadySignedUp(id) {
