@@ -1,18 +1,27 @@
 const { MasterSheet } = require("../../sheets/sheet");
 const RegistrationManager = require("./registration");
+const DatabaseError = require("../../sheets/errors");
 
 const SHEET_TABLES = {
   PLAYERS: {
+    name: "players",
     range: "players!A1:E",
   },
   PLAYERS_DISCORD: {
+    name: "players_discord",
     range: "players_discord!A1:D",
   },
   PLAYERS_SIGNUP: {
-    range: "players_signup!A1:F",
+    name: "players_signup",
+    range: "players_signup!A1:G",
   },
   TEAMS: {
-    range: "teams!A1:F",
+    name: "teams",
+    range: "teams!A1:H",
+  },
+  TEST: {
+    name: "stuff",
+    range: "stuff!A1:B",
   },
 };
 
@@ -22,8 +31,33 @@ class MasterSheetManager {
     this._sheetTables = sheets;
   }
 
+  async test() {
+    return await this._sheet.listMany(this._sheetTables.TEST);
+  }
+
   async getSignUps() {
     return await this._sheet.listMany(this._sheetTables.PLAYERS_SIGNUP);
+  }
+
+  async getFreeAgents() {
+    return await this._sheet.findMany(this._sheetTables.PLAYERS_SIGNUP, {
+      is_waiver: {
+        value: 0,
+      },
+    });
+  }
+
+  async updatePlayerTeam(playerID, teamID) {
+    return await this._sheet.findOneAndUpdate(
+      SHEET_TABLES.PLAYERS,
+      [teamID],
+      {
+        player_id: {
+          value: playerID,
+        },
+      },
+      { header: "current_team_id" }
+    );
   }
 
   async getDiscordUsers() {
@@ -36,43 +70,62 @@ class MasterSheetManager {
 
   async getPlayerByID(playerID) {
     return await this._sheet.findOne(this._sheetTables.PLAYERS, {
-      player_id: playerID,
+      player_id: {
+        value: playerID,
+      },
     });
   }
 
   async getTeam(teamID) {
     return await this._sheet.findOne(this._sheetTables.TEAMS, {
-      team_id: teamID,
+      team_id: {
+        value: teamID,
+      },
+    });
+  }
+
+  async getManagersTeam(managerID) {
+    return await this._sheet.findOne(this._sheetTables.TEAMS, {
+      manager_player_ids: {
+        value: managerID,
+        isArraySearch: true,
+      },
+    });
+  }
+
+  async getTeamsAffiliate(teamID) {
+    return await this._sheet.findOne(this._sheetTables.TEAMS, {
+      team_id: {
+        value: teamID,
+      },
     });
   }
 
   async getPlayersByTeam(teamID) {
     return await this._sheet.findMany(this._sheetTables.PLAYERS, {
-      current_team_id: teamID,
+      current_team_id: {
+        value: teamID,
+      },
     });
   }
 
-  async getPlayerByDiscordID(id) {
-    const discordPlayersResponse = await this._sheet.findOne(
+  async getPlayerByDiscordID(discordID) {
+    const discordProfile = await this._sheet.findOne(
       this._sheetTables.PLAYERS_DISCORD,
-      1,
-      id
+      {
+        discord_id: {
+          value: discordID,
+        },
+      }
     );
 
-    if (discordPlayersResponse === null) return null;
-    const { row } = discordPlayersResponse;
+    const { player_id } = discordProfile;
 
-    const [playerID] = row;
-
-    const playersResponse = await this._sheet.findOne(
-      this._sheetTables.PLAYERS,
-      0,
-      playerID
-    );
-
-    if (playersResponse === null) return null;
-
-    return playersResponse.row;
+    return await this._sheet.findOne(this._sheetTables.PLAYERS, {
+      player_id: {
+        value: player_id,
+      },
+    });
   }
 
   async getLastestPlayerID() {
@@ -82,26 +135,25 @@ class MasterSheetManager {
   }
 
   async getDiscordByPlayerID(discordID) {
-    const discordProfile = await this._sheet.findOne(
-      this._sheetTables.PLAYERS_DISCORD,
-      {
-        player_id: discordID,
-      }
-    );
-
-    if (discordProfile === null) return null;
-
-    return discordProfile;
+    return await this._sheet.findOne(this._sheetTables.PLAYERS_DISCORD, {
+      player_id: {
+        value: discordID,
+      },
+    });
   }
 
   async checkIfAlreadySignedUp(id) {
-    const signUpPlayerRes = await this._sheet.findOne(
+    const playerSignUp = await this._sheet.findOne(
       this._sheetTables.PLAYERS_SIGNUP,
-      0,
-      id
+      {
+        player_id: {
+          value: id,
+        },
+      },
+      false
     );
 
-    if (signUpPlayerRes === null) return false;
+    if (playerSignUp === null) return false;
     return true;
   }
 

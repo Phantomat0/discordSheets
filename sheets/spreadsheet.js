@@ -1,4 +1,4 @@
-const { SheetError } = require("./errors");
+const { SheetError, DatabaseError } = require("./errors");
 
 class SpreadSheet {
   constructor(google, oAuth2Client, sheetID) {
@@ -77,13 +77,21 @@ class SpreadSheet {
       }
     };
 
-    const data = getData();
+    const data = await getData();
 
     if (data === null)
-      throw new DatabaseError(`findOne`, `[${id}] does not exist`);
+      throw new DatabaseError(
+        `findOne`,
+        `[${JSON.stringify(filterQueryObj)}] does not exist`
+      );
 
-    if (data.length > 1 || enforceOne)
-      throw new DatabaseError(`findOne`, `Multiple [${id}] exist`);
+    if (data.length > 1 && enforceOne)
+      throw new DatabaseError(
+        `findOne`,
+        `Multiple [${JSON.stringify(filterQueryObj)}] exist`
+      );
+
+    return data[0];
   }
 
   async findMany({ range }, filterQueryObj) {
