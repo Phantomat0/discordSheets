@@ -6,11 +6,14 @@ module.exports = {
     .setName("test")
     .setDescription("Test Database"),
   async execute(interaction) {
-    // const players = mainDatabase.getPlayersFromTeam(1);
-    // console.log(players);
-
-    const x = await mainDatabase.getPlayersByTeam(1);
-    console.log(x, "test");
-    interaction.reply("LOL IT WORKED");
+    try {
+      const x = await mainDatabase.getManagersTeam(1);
+      console.log(x);
+    } catch (error) {
+      if (error?.type) {
+        error.handleError();
+        return null;
+      }
+    }
   },
 };
