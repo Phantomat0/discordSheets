@@ -22,18 +22,43 @@ class SpreadSheet {
     return this.getSheet().spreadsheets.values;
   }
 
+  async getHeaders({ range }) {
+    const response = await this.getSheetValues().get({
+      spreadsheetId: this._sheetID,
+      range: range,
+    });
+    const {
+      data: { values },
+    } = response;
+
+    // No data in the sheet
+    if (values.length === 0) return [];
+
+    const [tableHeaders] = values;
+
+    return tableHeaders;
+  }
+
   async findOne({ range }, filterQueryObj) {
     const filteredData = await this.findMany({ range }, filterQueryObj);
 
     if (filteredData === null) return null;
 
+    const filterParamsStr = Object.entries(filterQueryObj)
+      .map(([key, paramObj]) => {
+        return `${key}: ${paramObj.value}`;
+      })
+      .join(", ");
+
+    if (filteredData.length === 0) {
+      console.warn(
+        `findOne was not able to return any results using queries: ${filterParamsStr}. `
+      );
+      return null;
+    }
+
     // Warn the user if the query returns multiple results, which is not the intended usage of findOne
     if (filteredData.length > 1) {
-      const filterParamsStr = Object.entries(filterQueryObj)
-        .map(([key, value]) => {
-          return `${key}: ${value}`;
-        })
-        .join(", ");
       console.warn(
         `findOne returned ${filteredData.length} results, when using queries: ${filterParamsStr}. Try using findMany() when querying for multiple results`
       );
@@ -71,14 +96,166 @@ class SpreadSheet {
       }
     }
 
+    // Google sheets API always returns strings, so only ==
     const filteredData = dataArray.filter((dataObj) => {
-      return Object.entries(filterQueryObj).every(([key, value]) => {
-        // Google sheets API always returns strings, so only ==
-        return dataObj[key] == value;
+      return Object.entries(filterQueryObj).every(([key, paramObj]) => {
+        // If the param has arraySearch option
+        if (paramObj?.isArraySearch) {
+          return JSON.parse(dataObj[key]).some((val) => val == paramObj.value);
+        }
+        return dataObj[key] == paramObj.value;
       });
     });
 
     return filteredData;
+  }
+
+  async findOneAndUpdate(sheet, valueArray, filterQueryObj, updateQuery) {
+    const determineRange = async () => {
+      const { range, name } = sheet;
+
+      // If we supply a range in updateQuery, we dont have to search
+      if (updateQuery.hasOwnProperty("range")) {
+        return `${name}!${updateQuery.range}`;
+      } else {
+        try {
+          if (!updateQuery.hasOwnProperty("header"))
+            throw {
+              type: "Header Error",
+              message: `No header provided in updateQuery`,
+            };
+          const dataArray = await this.listMany({ range });
+
+          if (dataArray === null)
+            throw {
+              type: "Filter Error",
+              message: "Response returned null",
+            };
+
+          // Check to see if every filter criteria is a valid key in object
+          const invalidFilterQuery =
+            Object.keys(filterQueryObj).find((key) => {
+              return !dataArray[0].hasOwnProperty(key);
+            }) ?? null;
+
+          if (invalidFilterQuery !== null)
+            throw {
+              type: "Filter Error",
+              message: `Invalid filter query ${invalidFilterQuery}`,
+            };
+
+          // Google sheets API always returns strings, so only ==
+          const filteredData = dataArray.filter((dataObj) => {
+            return Object.entries(filterQueryObj).every(([key, paramObj]) => {
+              // If the param has arraySearch option
+              if (paramObj?.isArraySearch) {
+                return JSON.parse(dataObj[key]).some(
+                  (val) => val == paramObj.value
+                );
+              }
+              return dataObj[key] == paramObj.value;
+            });
+          });
+
+          const filterParamsStr = Object.entries(filterQueryObj)
+            .map(([key, paramObj]) => {
+              return `${key}: ${paramObj.value}`;
+            })
+            .join(", ");
+
+          if (filteredData.length > 1)
+            throw {
+              type: "Filter Error",
+              message: `findOneAndUpdate found ${filteredData.length} results when using queries: ${filterParamsStr}, when it only accepts one. `,
+            };
+
+          if (filteredData.length === 0)
+            throw {
+              type: "Filter Error",
+              message: `findOneAndUpdate found 0 results, using queries: ${filterParamsStr} `,
+            };
+
+          // Our filtered data will always be an array, since its a findOne, we return the first value
+
+          const [filterResult] = filteredData;
+
+          // Now that we found the row, we need to find the column(s)
+
+          const headers = await this.getHeaders({ range });
+
+          if (headers.length === 0)
+            throw {
+              type: "Header Error",
+              message: `Error fetching headers or headers are empty`,
+            };
+
+          // Get the index of the header we want to search for
+          const { header } = updateQuery;
+
+          const indexOfHeader = headers.indexOf(header);
+
+          const indexOfRow = dataArray.indexOf(filterResult) + 2; // +2 Factor in dataArray has no headers AND Google sheets start at 1 not 0
+
+          // Now that we have our indexes, we have to get them in terms of A, B, C, D
+
+          // Google sheet column names, if you have more columns do AB, AC etc
+          const columnNames = [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+          ];
+
+          const columnLetter = columnNames[indexOfHeader];
+
+          return `${name}!${columnLetter}${indexOfRow}`;
+        } catch (error) {
+          if (error?.type) {
+            console.error(`${error.type}: ${error.message}`);
+            return null;
+          }
+        }
+        // We have to search for the range, by indexing the headers
+      }
+    };
+
+    const rangeToUpdate = await determineRange();
+
+    if (rangeToUpdate === null) {
+      console.log("There was an error, rangeToUpdate is null");
+      return null;
+    }
+
+    await this.getSheetValues().update({
+      spreadsheetId: this._sheetID,
+      range: rangeToUpdate,
+      valueInputOption: "USER_ENTERED",
+      resource: {
+        values: [valueArray],
+      },
+    });
   }
 
   listOne() {}
