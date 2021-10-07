@@ -1,23 +1,13 @@
-class SheetError {
-  constructor(type, message) {
-    this.type = type;
-    this.message = message;
-  }
-
-  handleError() {
-    console.error(`${this.type}: ${this.message}`);
-    return null;
-  }
-}
+const { SheetError } = require("./errors");
 
 class SpreadSheet {
-  constructor(oAuth2Client, sheetID) {
-    this._oAuth2Client = oAuth2Client;
+  constructor(google, oAuth2Client, sheetID) {
+    (this._google = google), (this._oAuth2Client = oAuth2Client);
     this._sheetID = sheetID;
   }
 
   getSheet() {
-    return google.sheets({ version: "v4", auth: this._oAuth2Client });
+    return this._google.sheets({ version: "v4", auth: this._oAuth2Client });
   }
 
   getSheetValues() {
@@ -76,27 +66,24 @@ class SpreadSheet {
     return tableHeaders;
   }
 
-  async findOne({ range }, filterQueryObj) {
-    try {
-      const filteredData = await this.findMany({ range }, filterQueryObj);
-
-      // Warn the user if the query returns multiple results, which is not the intended usage of findOne
-      if (filteredData.length > 1) {
-        console.warn(
-          `findOne returned ${filteredData.length} results. Try using findMany() when querying for multiple results`
-        );
+  async findOne({ range }, filterQueryObj, enforceOne = true) {
+    const getData = async () => {
+      try {
+        return await this.findMany({ range }, filterQueryObj);
+      } catch (error) {
+        if (error?.type) return error.handleError();
+        console.log(error);
+        return null;
       }
+    };
 
-      // Return the first value
-      return {
-        data: filteredData[0] ?? null,
-        resultsLength: filteredData.length,
-      };
-    } catch (error) {
-      if (error?.type) return error.handleError();
-      console.log(error);
-      return null;
-    }
+    const data = getData();
+
+    if (data === null)
+      throw new DatabaseError(`findOne`, `[${id}] does not exist`);
+
+    if (data.length > 1 || enforceOne)
+      throw new DatabaseError(`findOne`, `Multiple [${id}] exist`);
   }
 
   async findMany({ range }, filterQueryObj) {
