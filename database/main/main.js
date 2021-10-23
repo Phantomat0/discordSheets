@@ -5,11 +5,7 @@ const DatabaseError = require("../../sheets/errors");
 const SHEET_TABLES = {
   PLAYERS: {
     name: "players",
-    range: "players!A1:E",
-  },
-  PLAYERS_DISCORD: {
-    name: "players_discord",
-    range: "players_discord!A1:D",
+    range: "players!A1:F",
   },
   PLAYERS_SIGNUP: {
     name: "players_signup",
@@ -17,11 +13,27 @@ const SHEET_TABLES = {
   },
   TEAMS: {
     name: "teams",
-    range: "teams!A1:H",
+    range: "teams!A1:J",
+  },
+  WAIVERS: {
+    name: "waiver-claims",
+    range: "waiver-claims!A1:E",
+  },
+  FANTASY_TEAMS: {
+    name: "fantasy-teams",
+    range: "fantasy-teams!A1:S",
+  },
+  FANTASY_RANKINGS: {
+    name: "fantasy-teams",
+    range: "fantasy-teams!A1:T",
   },
   TEST: {
     name: "stuff",
     range: "stuff!A1:B",
+  },
+  CONFIG: {
+    name: "config",
+    range: "config!A1:H2",
   },
 };
 
@@ -60,18 +72,22 @@ class MasterSheetManager {
     );
   }
 
-  async getDiscordUsers() {
-    return await this._sheet.listMany(this._sheetTables.PLAYERS_DISCORD);
-  }
-
   async getPlayers() {
     return await this._sheet.listMany(this._sheetTables.PLAYERS);
   }
 
-  async getPlayerByID(playerID) {
+  async getPlayer(playerID) {
     return await this._sheet.findOne(this._sheetTables.PLAYERS, {
       player_id: {
         value: playerID,
+      },
+    });
+  }
+
+  async getPlayerByName(playerName) {
+    return await this._sheet.findOne(this._sheetTables.PLAYERS, {
+      player_name: {
+        value: playerName,
       },
     });
   }
