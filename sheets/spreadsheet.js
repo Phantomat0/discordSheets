@@ -33,7 +33,10 @@ class SpreadSheet {
         if (paramObj?.isArraySearch) {
           return JSON.parse(dataObj[key]).some((val) => val == paramObj.value);
         }
-        return dataObj[key] == paramObj.value;
+
+        return (
+          dataObj[key]?.toLowerCase() == paramObj.value.toString().toLowerCase()
+        );
       });
     });
 
@@ -79,7 +82,7 @@ class SpreadSheet {
 
     const data = await getData();
 
-    if (data === null)
+    if (data === null && enforceOne)
       throw new DatabaseError(
         `findOne`,
         `[${JSON.stringify(filterQueryObj)}] does not exist`
@@ -91,7 +94,7 @@ class SpreadSheet {
         `Multiple [${JSON.stringify(filterQueryObj)}] exist`
       );
 
-    return data[0];
+    return data[0] ?? null;
   }
 
   async findMany({ range }, filterQueryObj) {
@@ -103,6 +106,8 @@ class SpreadSheet {
           "findMany Filter Error",
           "dataArray returned null"
         );
+
+      if (dataArray.length === 0) return [];
 
       const { data: filteredData } = this.#filterData(
         dataArray,
