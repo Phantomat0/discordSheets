@@ -66,8 +66,7 @@ typings/
 
 # next.js build output
 .next
-discord/config/config.json
-discord/config/config.json
-discord/config/config.json
-discord/config/config.json
 .gitignore
+
+sheets/config/token.json
+discord/config/config.json
