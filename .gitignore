@@ -7,12 +7,10 @@ yarn-error.log*
 
 
 # Sheets API
-sheets/config.json
-sheets/token.json
-sheets/credentials.json
+sheets/config/
 
 # Discord API
-discord/config.json
+discord/config/config.json
 
 # Runtime data
 pids
@@ -68,3 +66,8 @@ typings/
 
 # next.js build output
 .next
+discord/config/config.json
+discord/config/config.json
+discord/config/config.json
+discord/config/config.json
+.gitignore

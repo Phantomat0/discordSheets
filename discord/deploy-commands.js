@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
-const { CLIENT_ID, GUILD_ID, TOKEN } = require("./config.json");
+const { CLIENT_ID, GUILD_ID, TOKEN } = require("./config/config");
 
 const commandFiles = fs
   .readdirSync("discord/commands")

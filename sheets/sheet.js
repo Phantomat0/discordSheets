@@ -66,7 +66,7 @@ function getNewToken(oAuth2Client) {
 }
 
 // Spreadsheets
-const MasterSheet = new SpreadSheet(auth, MASTER_SHEET_ID);
+const MasterSheet = new SpreadSheet(google, auth, MASTER_SHEET_ID);
 
 module.exports = {
   MasterSheet,

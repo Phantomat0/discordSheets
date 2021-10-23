@@ -18,7 +18,8 @@
     "discord.js": "^13.1.0",
     "dotenv": "^8.2.0",
     "googleapis": "^87.0.0",
-    "node": "16.6.1"
+    "node": "16.6.1",
+    "node-html-to-image": "^3.2.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.13"
