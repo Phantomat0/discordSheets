@@ -55,6 +55,24 @@ const getManagerAndTeamFromInteractionUser = async (interactionUserID) => {
   };
 };
 
+function addDiscordRole(discordMember, roleID) {
+  try {
+    discordMember.roles.add(roleID);
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+function removeDiscordRole(discordMember, roleID) {
+  try {
+    discordMember.roles.remove(roleID);
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
 function getTeamManagerIDs(teamProfile) {
   const { manager_player_ids } = teamProfile;
   const managersArray = JSON.parse(manager_player_ids);
@@ -175,4 +193,6 @@ module.exports = {
   getDiscordMember,
   sendInteractionCompleted,
   sendInteractionTimedOut,
+  addDiscordRole,
+  removeDiscordRole,
 };
