@@ -141,6 +141,7 @@ async function sendInformation(client) {
 
 module.exports = {
   name: "ready",
+  once: true,
   async execute(client) {
     console.log("Ready!");
 

@@ -11,6 +11,7 @@ const {
 } = require("../../bot-util");
 
 const mainDatabase = require("../../../database/main/main");
+const { LOGO_URL } = require("../../config/logo");
 const {
   MessageEmbed,
   MessageActionRow,
@@ -162,15 +163,11 @@ const getTeamEmbed = async (teamID) => {
     .setTitle(`${name} Dashboard`)
     .setColor(color)
     .setDescription(
-      `
-        Divison: \`${division_id}\`
-        Affiliate Team: \`${affiliateTeamProfile.name}\`
-        
-        **General Manager** 
-        \`\`\`${generalManagerNameProfile?.player_name ?? "None"}\`\`\`
-        **Managers**
-        \`\`\`${assistantManagersMapped.join("\n")} \`\`\`
-  `
+      `Divison: \`${division_id}\`\nAffiliate Team: \`${
+        affiliateTeamProfile.name
+      }\`\n**General Manager**\n\`\`\`${
+        generalManagerNameProfile?.player_name ?? "None"
+      }\`\`\`\n**Managers**\n\`\`\`${assistantManagersMapped.join("\n")} \`\`\``
     )
     .setThumbnail(logo_url)
     .addFields(
@@ -344,7 +341,7 @@ async function signCmd(interaction) {
     const signEmbed = new MessageEmbed()
       .setColor(teamProfile.color)
       .setAuthor(
-        `The ${teamProfile.name} sign ${playerName} from Free Agency`,
+        `${teamProfile.name} sign ${playerName} from Free Agency`,
         teamProfile.logo_url
       )
       .setDescription(`<@${discordID}>`)
@@ -356,11 +353,9 @@ async function signCmd(interaction) {
 
     const signDMEmbed = new MessageEmbed()
       .setColor(teamProfile.color)
-      .setAuthor(`American Futsal League`)
+      .setAuthor(`American Futsal League`, LOGO_URL)
       .setTitle(`You have been signed!`)
-      .setDescription(
-        `The ${teamProfile.name} have signed you from Free Agency!`
-      );
+      .setDescription(`${teamProfile.name} have signed you from Free Agency!`);
 
     if (teamProfile.discord_invite) {
       signDMEmbed.addField(
@@ -516,7 +511,7 @@ async function releaseCmd(interaction) {
       const releaseEmbed = new MessageEmbed()
         .setColor(teamProfile.color)
         .setAuthor(
-          `The ${teamProfile.name} release ${playerProfile.player_name}`,
+          `${teamProfile.name} release ${playerProfile.player_name}`,
           teamProfile.logo_url
         )
         .setDescription(`<@${playerProfile.discord_id}> is now a Free Agent.`)
@@ -528,10 +523,10 @@ async function releaseCmd(interaction) {
 
       const releaseDMEmbed = new MessageEmbed()
         .setColor(teamProfile.color)
-        .setAuthor(`American Futsal League`)
+        .setAuthor(`American Futsal League`, LOGO_URL)
         .setTitle(`You have been released!`)
         .setDescription(
-          `The ${teamProfile.name} have cut ties with you. You are now a Free Agent!\n*Note: You do not have to sign up for Free Agency again*`
+          `${teamProfile.name} have cut ties with you. You are now a Free Agent!\n*Note: You do not have to sign up for Free Agency again*`
         );
 
       await sendMessageIfValidUser(interaction, playerProfile.discord_id, {

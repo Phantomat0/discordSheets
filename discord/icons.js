@@ -62,6 +62,7 @@ const ICONS = {
   WavingHand: String.fromCodePoint(0x1f44b),
   OkHand: String.fromCodePoint(0x1f44c),
   FileFolder: String.fromCodePoint(0x1f4c1),
+  Balance: String.fromCodePoint(0x2696),
 };
 
 module.exports = ICONS;

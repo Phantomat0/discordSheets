@@ -1,11 +1,18 @@
-const { SUGGESTIONS_ID, REGISTRATION_ID } = require("../config/channels");
+const {
+  SUGGESTIONS_ID,
+  REGISTRATION_ID,
+  TICKETS_ID,
+} = require("../config/channels");
 const { OkHand, X } = require("../icons");
 
 module.exports = {
   name: "messageCreate",
   async execute(message) {
     if (message.author.bot) return;
-    if (message.channel.id === REGISTRATION_ID) {
+    if (
+      message.channel.id === REGISTRATION_ID ||
+      message.channel.id === TICKETS_ID
+    ) {
       await message.delete();
     }
 

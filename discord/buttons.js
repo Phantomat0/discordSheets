@@ -5,14 +5,21 @@ const cancelButton = new MessageButton()
   .setLabel("Cancel")
   .setStyle("SECONDARY");
 
-const getConfirmButton = (id) =>
-  new MessageButton().setCustomId(id).setLabel("Confirm").setStyle("SUCCESS");
+const buttonFactory = (IDStr, styleStr, labelStr) =>
+  new MessageButton().setCustomId(IDStr).setStyle(styleStr).setLabel(labelStr);
 
-const getCancelAndConfirmButtonRow = (confirmID) => {
+const getCancelAndNextButtonRow = (nextID) => {
   return new MessageActionRow().addComponents(
-    getConfirmButton(confirmID),
+    buttonFactory(nextID, "PRIMARY", "Next"),
     cancelButton
   );
 };
 
-module.exports = { getCancelAndConfirmButtonRow };
+const getCancelAndConfirmButtonRow = (confirmID) => {
+  return new MessageActionRow().addComponents(
+    buttonFactory(confirmID, "SUCCESS", "Confirm"),
+    cancelButton
+  );
+};
+
+module.exports = { getCancelAndConfirmButtonRow, getCancelAndNextButtonRow };
