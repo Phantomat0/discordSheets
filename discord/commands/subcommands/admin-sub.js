@@ -1,5 +1,10 @@
-const { MessageEmbed } = require("discord.js");
+const {
+  MessageEmbed,
+  MessageSelectMenu,
+  MessageActionRow,
+} = require("discord.js");
 const mainDatabase = require("../../../database/main/main");
+const { LOGO_URL } = require("../../config/logo");
 const {
   updateSignUpList,
   getTeamManagerIDs,
@@ -8,15 +13,22 @@ const {
   getDiscordMember,
   sendInteractionCompleted,
   sendInteractionTimedOut,
+  sendMessageIfValidUser,
 } = require("../../bot-util");
-const { getCancelAndConfirmButtonRow } = require("../../buttons");
+const {
+  getCancelAndConfirmButtonRow,
+  getCancelAndNextButtonRow,
+} = require("../../buttons");
 const { successEmbedCreator } = require("../../embeds");
 const { CommandError } = require("../../errors");
-const { TRANSACTIONS_ID } = require("../../config/channels");
+const { TRANSACTIONS_ID, TRADES_ID } = require("../../config/channels");
+const { Balance } = require("../../icons");
 const {
   GENERAL_MANAGER_ROLE_ID,
   ASSISTANT_MANAGER_ROLE_ID,
 } = require("../../config/roles");
+
+async function tradeCmd() {}
 
 async function signCmd(interaction) {}
 
@@ -28,11 +40,8 @@ async function appointManagerCmd(interaction) {
   const positionOption = options.getString("position");
   const playerNameOption = options.getString("player_name");
 
-  console.log(teamIDOption);
-
   const teamProfile = await mainDatabase.getTeam(teamIDOption);
 
-  console.log(teamProfile, "teamProfile");
   const { generalManagerID, assistantManagerIDs } =
     getTeamManagerIDs(teamProfile);
 
@@ -74,8 +83,6 @@ async function appointManagerCmd(interaction) {
     selectedPlayerProfile.player_id,
     false
   );
-
-  console.log(isAManager);
 
   if (isAManager)
     throw new CommandError(
@@ -201,8 +208,6 @@ async function appointManagerCmd(interaction) {
           currentGMProfile.discord_id
         );
 
-        console.log(currentGMDiscordMember, "currentGM");
-
         if (currentGMDiscordMember) {
           currentGMDiscordMember.roles.remove(GENERAL_MANAGER_ROLE_ID);
           currentGMDiscordMember.roles.add(ASSISTANT_MANAGER_ROLE_ID);
@@ -246,6 +251,319 @@ async function appointManagerCmd(interaction) {
 
 async function waiverSignCmd(interaction) {}
 
+async function getTeamAndAffiliatePlayersNoGM(teamProfile) {
+  const d1Players = await mainDatabase.getPlayersByTeam(teamProfile.team_id);
+  const d2Team = await mainDatabase.getTeamsAffiliate(teamProfile.team_id);
+  const d2Players = await mainDatabase.getPlayersByTeam(d2Team.team_id);
+
+  const { generalManagerID, assistantManagerIDs } =
+    getTeamManagerIDs(teamProfile);
+
+  const d1PlayersNoGM = d1Players.filter(
+    (player) => player.player_id != generalManagerID
+  );
+
+  return {
+    d1Players: d1PlayersNoGM,
+    d2Players: d2Players,
+  };
+}
+
+async function tradeCmd(interaction) {
+  const { options } = interaction;
+
+  const team1ID = options.getString("team1");
+  const team2ID = options.getString("team2");
+  const stipulationStr = options.getString("stipulation");
+
+  if (team1ID === team2ID)
+    throw new CommandError("Invalid Teams", "Duplicate Teams Selected");
+
+  const team1Profile = await mainDatabase.getTeam(team1ID);
+  const { d1Players, d2Players } = await getTeamAndAffiliatePlayersNoGM(
+    team1Profile
+  );
+
+  const messageSelect = new MessageSelectMenu()
+    .setCustomId("team1PlayerTrade")
+    .setPlaceholder("No players selected")
+    .setMinValues(1);
+
+  // Now lets map that to the messageSelect options format, make sure to filter out the GM, as the GM cant release himself
+  const playerOptionsArray = [...d1Players, ...d2Players].map((player) => {
+    return {
+      label: player.player_name,
+      value: player.player_id,
+    };
+  });
+
+  messageSelect.addOptions(playerOptionsArray);
+
+  const playerSelectMenu = new MessageActionRow().addComponents(messageSelect);
+
+  const selectEmbed = new MessageEmbed().setTitle(
+    `Select the player's that will be traded AWAY from ${team1Profile.name}`
+  );
+
+  await interaction.editReply({
+    embeds: [selectEmbed],
+    components: [playerSelectMenu],
+    ephemeral: true,
+  });
+
+  const team1SelectFilter = (i) =>
+    i.user.id === interaction.user.id && i.customId === "team1PlayerTrade";
+
+  const team1SelectCollector =
+    interaction.channel.createMessageComponentCollector({
+      filter: team1SelectFilter,
+      componentType: "SELECT_MENU",
+      time: 15000,
+      max: 1,
+    });
+
+  team1SelectCollector.on("end", (collected) => {
+    if (collected.size >= 1) return;
+    sendInteractionTimedOut(interaction);
+  });
+
+  team1SelectCollector.on("collect", async (team1SelectInteraction) => {
+    const team2Profile = await mainDatabase.getTeam(team2ID);
+
+    const messageSelect2 = new MessageSelectMenu()
+      .setCustomId("team2PlayerTrade")
+      .setPlaceholder("No players selected")
+      .setMinValues(1);
+
+    const { d1Players: d1PlayersTeam2, d2Players: d2PlayersTeam2 } =
+      await getTeamAndAffiliatePlayersNoGM(team2Profile);
+
+    // Now lets map that to the messageSelect options format, make sure to filter out the GM, as the GM cant release himself
+    const playerOptionsArray2 = [...d1PlayersTeam2, ...d2PlayersTeam2].map(
+      (player) => {
+        return {
+          label: player.player_name,
+          value: player.player_id,
+        };
+      }
+    );
+
+    messageSelect2.addOptions(playerOptionsArray2);
+
+    const playerSelectMenu2 = new MessageActionRow().addComponents(
+      messageSelect2
+    );
+
+    const selectEmbed2 = new MessageEmbed().setTitle(
+      `Select the player's that will be traded AWAY from ${team2Profile.name}`
+    );
+
+    team1SelectInteraction.reply({
+      embeds: [selectEmbed2],
+      components: [playerSelectMenu2],
+      ephemeral: true,
+    });
+
+    sendInteractionCompleted(interaction);
+
+    const team2SelectFilter = (i) =>
+      i.user.id === interaction.user.id && i.customId === "team2PlayerTrade";
+
+    const team2SelectCollector =
+      interaction.channel.createMessageComponentCollector({
+        filter: team2SelectFilter,
+        componentType: "SELECT_MENU",
+        time: 15000,
+        max: 1,
+      });
+
+    team2SelectCollector.on("end", (collected) => {
+      if (collected.size >= 1) return;
+      sendInteractionTimedOut(team1SelectInteraction);
+    });
+
+    team2SelectCollector.on("collect", async (team2SelectInteraction) => {
+      const team1PlayerIDs = team1SelectInteraction.values;
+      const team2PlayerIDs = team2SelectInteraction.values;
+
+      const players = await mainDatabase.getPlayers();
+
+      const getPlayerStrForEmbed = (playerIDsArray) => {
+        return playerIDsArray
+          .map((playerID) => {
+            const playerProfile = players.find(
+              (player) => player.player_id === playerID
+            );
+            return `${playerProfile.player_name} <@${playerProfile.discord_id}>`;
+          })
+          .join("\n");
+      };
+
+      const team1PlayersStr = getPlayerStrForEmbed(team1PlayerIDs);
+      const team2PlayersStr = getPlayerStrForEmbed(team2PlayerIDs);
+
+      const confirmEmbed = new MessageEmbed()
+        .setTitle("Confirm Trade")
+        .addField(`${team1Profile.name} receive`, team2PlayersStr)
+        .addField(`${team2Profile.name} receive`, team1PlayersStr);
+
+      const buttons = getCancelAndConfirmButtonRow("tradeConfirm");
+
+      if (stipulationStr) {
+        confirmEmbed.addField("Stipulation", stipulationStr);
+      }
+
+      team2SelectInteraction.reply({
+        embeds: [confirmEmbed],
+        components: [buttons],
+        ephemeral: true,
+      });
+
+      const buttonConfirmFilter = (i) =>
+        i.user.id === interaction.user.id && i.customId === "tradeConfirm";
+
+      const buttonCollector =
+        interaction.channel.createMessageComponentCollector({
+          filter: buttonConfirmFilter,
+          componentType: "BUTTON",
+          time: 15000,
+          max: 1,
+        });
+
+      sendInteractionCompleted(team1SelectInteraction);
+
+      buttonCollector.on("end", (collected) => {
+        if (collected.size >= 1) return;
+        sendInteractionTimedOut(team2SelectInteraction);
+      });
+
+      buttonCollector.on("collect", async (buttonInteraction) => {
+        const successEmbed = successEmbedCreator(
+          "Successful Trade",
+          "This trade has gone through!"
+        );
+
+        // Ok now we have to do all the changing teams
+
+        const updatePlayerTeam = async (
+          playerIDsArray,
+          currentTeamProfile,
+          newTeamProfile
+        ) => {
+          playerIDsArray.forEach(async (playerID) => {
+            // First we have to check if this player is d1 or d2
+            const playerProfile = players.find(
+              (player) => player.player_id === playerID
+            );
+
+            const discordMember = await getDiscordMember(
+              interaction,
+              playerProfile.discord_id
+            );
+
+            if (discordMember) {
+              try {
+                const tradeDMEmbed = new MessageEmbed()
+                  .setColor(newTeamProfile.color)
+                  .setAuthor(`American Futsal League`, LOGO_URL)
+                  .setTitle(`You have been traded!`)
+                  .setDescription(
+                    `You have been traded from ${currentTeamProfile.name} to **${newTeamProfile.name}**`
+                  );
+
+                sendMessageIfValidUser(interaction, playerProfile.discord_id, {
+                  embeds: [tradeDMEmbed],
+                });
+              } catch (error) {
+                console.log(error);
+              }
+            }
+
+            const isAD2Player = parseInt(playerProfile.current_team_id) > 4;
+
+            // If hes a d2 player, we have to change his team to the D2 team and remove his d2 role and add the new d2 role
+            if (isAD2Player) {
+              const d2CurrentTeamProfile = await mainDatabase.getTeam(
+                currentTeamProfile.team_id
+              );
+
+              const d2NewTeamProfile = await mainDatabase.getTeamsAffiliate(
+                newTeamProfile.team_id
+              );
+
+              mainDatabase.updatePlayerTeam(playerID, d2NewTeamProfile.team_id);
+              if (discordMember) {
+                // discordMember.roles.remove(d2CurrentTeamProfile.role_id);
+                // discordMember.roles.add(d2NewTeamProfile.role_id);
+              }
+              return;
+            }
+
+            mainDatabase.updatePlayerTeam(playerID, newTeamProfile.team_id);
+            if (discordMember) {
+              // discordMember.roles.remove(currentTeamProfile.role_id);
+              // discordMember.roles.add(newTeamProfile.role_id);
+            }
+          });
+        };
+
+        // Dont await these
+        updatePlayerTeam(team1PlayerIDs, team1Profile, team2Profile);
+        updatePlayerTeam(team2PlayerIDs, team2Profile, team1Profile);
+
+        const team1Emoji =
+          interaction.guild.emojis.cache.find(
+            (emoji) => emoji.name === team1Profile.emoji_name
+          ) ?? "";
+
+        const team2Emoji =
+          interaction.guild.emojis.cache.find(
+            (emoji) => emoji.name === team2Profile.emoji_name
+          ) ?? "";
+
+        const tradesChannelEmbed = new MessageEmbed()
+          .setTitle(
+            `Trade between ${team1Profile.name} and ${team2Profile.name}`
+          )
+          .setDescription(
+            `**<:${team1Emoji?.name}:${team1Emoji?.id}> ${
+              team1Profile.name
+            } receive**\n ${team2PlayersStr}\n\n**<:${team2Emoji?.name}:${
+              team2Emoji?.id
+            }> ${team2Profile.name} receive**\n ${team1PlayersStr}\n\n${
+              stipulationStr ? `*Stipulation: ${stipulationStr}*\n\n` : ""
+            }Who won this trade?`
+          )
+          .setColor("#EA003D")
+          .setFooter(
+            `${buttonInteraction.user.username}`,
+            buttonInteraction.user.displayAvatarURL()
+          )
+          .setTimestamp();
+
+        const tradeMessage = await interaction.client.channels.cache
+          .get(TRADES_ID)
+          .send({
+            embeds: [tradesChannelEmbed],
+          });
+
+        tradeMessage.react(team1Emoji);
+        tradeMessage.react(team2Emoji);
+        tradeMessage.react(Balance);
+
+        buttonInteraction.reply({
+          embeds: [successEmbed],
+          ephemeral: true,
+        });
+
+        sendInteractionCompleted(team2SelectInteraction);
+      });
+
+      // Make the confirm embed, confirm buttons
+    });
+  });
+}
+
 function updateEmbedsCmd(interaction) {
   updateSignUpList(interaction.client);
 
@@ -261,5 +579,6 @@ module.exports = new Map([
   ["release", releaseCmd],
   ["appoint", appointManagerCmd],
   ["waiversign", waiverSignCmd],
+  ["trade", tradeCmd],
   ["updateembeds", updateEmbedsCmd],
 ]);
