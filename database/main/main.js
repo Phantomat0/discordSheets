@@ -1,6 +1,7 @@
 const { MasterSheet } = require("../../sheets/sheet");
 const RegistrationManager = require("./registration");
 const DatabaseError = require("../../sheets/errors");
+const AsciiTable = require("ascii-table");
 
 const SHEET_TABLES = {
   PLAYERS: {
@@ -13,7 +14,7 @@ const SHEET_TABLES = {
   },
   TEAMS: {
     name: "teams",
-    range: "teams!A1:J",
+    range: "teams!A1:K",
   },
   WAIVERS: {
     name: "waiver-claims",
@@ -21,11 +22,15 @@ const SHEET_TABLES = {
   },
   FANTASY_TEAMS: {
     name: "fantasy-teams",
-    range: "fantasy-teams!A1:S",
+    range: "fantasy-teams!A1:T",
   },
   FANTASY_RANKINGS: {
-    name: "fantasy-teams",
-    range: "fantasy-teams!A1:T",
+    name: "fantasy-rankings",
+    range: "fantasy-rankings!A1:D",
+  },
+  FANTASY_PLAYER_RANKINGS: {
+    name: "fantasy-stats-all",
+    range: "fantasy-stats-all!A1:G",
   },
   TEST: {
     name: "stuff",
@@ -67,26 +72,56 @@ class MasterSheetManager {
     });
   }
 
-  async getFantasyTeamRankings() {
-    const allTeams = await this._sheet.listMany(
+  async getFantasyTeamRankingsTable() {
+    const fantasyRankings = await this._sheet.listMany(
       this._sheetTables.FANTASY_RANKINGS
     );
 
-    // Remove rosters
-    const statsOnly = allTeams.filter((team) => team.name === "stats");
+    const sortedRankings = fantasyRankings.sort(
+      (a, b) => b.total_points - a.total_points
+    );
 
-    const players = await this.getPlayers();
+    const rankingTable = new AsciiTable().setHeading(
+      "Rank",
+      "Team",
+      "Player",
+      "Total Points"
+    );
 
-    return statsOnly.map((team) => {
-      const playerName = players.find(
-        (player) => player.player_id === team.player_id
-      ).player_name;
-      return {
-        playerName,
-        teamName: team.team_name,
-        totalPoints: team.total_points,
-      };
+    sortedRankings.forEach((team, index) => {
+      rankingTable.addRow(
+        index + 1,
+        team.team_name,
+        team.player_name,
+        team.total_points
+      );
     });
+
+    return rankingTable.removeBorder().toString();
+  }
+
+  async getFantasyPlayerRankingsTable() {
+    const fantasyPlayerRankings = await this._sheet.listMany(
+      this._sheetTables.FANTASY_PLAYER_RANKINGS
+    );
+
+    // Only return the first twenty
+    const sortedRankings = fantasyPlayerRankings
+      .filter((player) => player.fantasy_points != 0)
+      .sort((a, b) => b.fantasy_points - a.fantasy_points)
+      .slice(0, 20);
+
+    const rankingTable = new AsciiTable().setHeading(
+      "Rank",
+      "Player",
+      "Total Points"
+    );
+
+    sortedRankings.forEach((player, index) => {
+      rankingTable.addRow(index + 1, player.player_name, player.fantasy_points);
+    });
+
+    return rankingTable.removeBorder().toString();
   }
 
   async updatePlayerFantasyRoster(playerID, newRosterArray) {
@@ -135,6 +170,7 @@ class MasterSheetManager {
     return {
       teamName: team_name,
       roster: rosterArray,
+      totalPoints: stats.total_points,
     };
   }
 
