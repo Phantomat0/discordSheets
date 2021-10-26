@@ -71,7 +71,7 @@ async function meCmd(interaction) {
   if (!playerFantasyTeam)
     throw new CommandError("No Team Found", "You do not have a fantasy team.");
 
-  const { roster, teamName } = playerFantasyTeam;
+  const { roster, teamName, totalPoints } = playerFantasyTeam;
 
   const rosterMappedStr = roster
     .map((player) => `${player.name} ${player.points}`)
@@ -81,7 +81,7 @@ async function meCmd(interaction) {
     .setColor("#00FFFF")
     .setTitle(teamName)
     .setDescription(
-      `Manager: **${playerProfile.player_name}**\nTotal Points\`\`\`css\n0\`\`\`\nCurrent Lineup\n\`\`\`css\n${rosterMappedStr}\`\`\``
+      `Manager: **${playerProfile.player_name}**\nTotal Points\`\`\`css\n${totalPoints}\`\`\`\nCurrent Lineup\n\`\`\`css\n${rosterMappedStr}\`\`\``
     );
 
   interaction.editReply({
@@ -278,25 +278,22 @@ async function editCmd(interaction) {
 }
 
 async function rankingsCmd(interaction) {
-  const rankings = await mainDatabase.getFantasyTeamRankings();
+  const teamRankingsTableStr = await mainDatabase.getFantasyTeamRankingsTable();
 
-  const rankingsRanked = await rankings.sort(
-    (a, b) => a.totalPoints - b.totalPoints
-  );
+  const playerRankingsTableStr =
+    await mainDatabase.getFantasyPlayerRankingsTable();
 
-  const rankingsStr = rankingsRanked
-    .map(
-      (team, index) =>
-        `#${index + 1} ${team.teamName} ${team.playerName} ${team.totalPoints}`
-    )
-    .join("\n");
-
-  const rankingsEmbed = new MessageEmbed()
+  const playerRankingsEmbed = new MessageEmbed()
     .setColor("#00FFFF")
-    .setTitle("Fantasy Rankings")
-    .setDescription(`\`\`\`css\n${rankingsStr}\`\`\``);
+    .setTitle("Fantasy Player Rankings")
+    .setDescription(`\`\`\`css\n${playerRankingsTableStr}\`\`\``);
+
+  const teamRankingsEmbed = new MessageEmbed()
+    .setColor("#00FFFF")
+    .setTitle("Fantasy Team Rankings")
+    .setDescription(`\`\`\`css\n${teamRankingsTableStr}\`\`\``);
   interaction.editReply({
-    embeds: [rankingsEmbed],
+    embeds: [teamRankingsEmbed, playerRankingsEmbed],
   });
 }
 
