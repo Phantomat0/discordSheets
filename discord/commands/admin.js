@@ -3,16 +3,21 @@ const { ADMIN_BOT_ID } = require("../config/channels");
 const { CommandError } = require("../errors");
 const subCommandsMap = require("./subcommands/admin-sub");
 
-const TEAMS = [
+const D1TEAMS = [
   ["Hellfish", "1"],
   ["Seoul Trains", "2"],
   ["Dayton Futsal Club", "3"],
   ["Savage Hax", "4"],
+];
+
+const D2TEAMS = [
   ["Dallas Dynasty", "5"],
   ["Busan Tigers", "6"],
   ["Dayton Futsal Academy", "7"],
   ["Imperial", "8"],
 ];
+
+const TEAMS = [...D1TEAMS, ...D2TEAMS];
 
 module.exports = {
   allowedRoles: ["Admin"],
@@ -108,6 +113,32 @@ module.exports = {
             .setName("player_name")
             .setDescription("The player's name")
             .setRequired(true)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("trade")
+        .setDescription("Announce a trade between two teams")
+        .addStringOption((option) => {
+          option.setName("team1").setDescription("Team 1").setRequired(true);
+          D1TEAMS.forEach((team) => {
+            const [name, id] = team;
+            option.addChoice(name, id);
+          });
+
+          return option;
+        })
+        .addStringOption((option) => {
+          option.setName("team2").setDescription("Team 2").setRequired(true);
+          D1TEAMS.forEach((team) => {
+            const [name, id] = team;
+            option.addChoice(name, id);
+          });
+
+          return option;
+        })
+        .addStringOption((option) =>
+          option.setName("stipulation").setDescription("Trade Stipulation")
         )
     )
     .addSubcommand((subcommand) =>
