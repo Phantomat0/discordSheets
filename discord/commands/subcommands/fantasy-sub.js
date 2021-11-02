@@ -277,26 +277,6 @@ async function editCmd(interaction) {
   });
 }
 
-async function rankingsCmd(interaction) {
-  const teamRankingsTableStr = await mainDatabase.getFantasyTeamRankingsTable();
-
-  const playerRankingsTableStr =
-    await mainDatabase.getFantasyPlayerRankingsTable();
-
-  const playerRankingsEmbed = new MessageEmbed()
-    .setColor("#00FFFF")
-    .setTitle("Fantasy Player Rankings")
-    .setDescription(`\`\`\`css\n${playerRankingsTableStr}\`\`\``);
-
-  const teamRankingsEmbed = new MessageEmbed()
-    .setColor("#00FFFF")
-    .setTitle("Fantasy Team Rankings")
-    .setDescription(`\`\`\`css\n${teamRankingsTableStr}\`\`\``);
-  interaction.editReply({
-    embeds: [teamRankingsEmbed, playerRankingsEmbed],
-  });
-}
-
 async function otherCmd(interaction) {
   const playerNameOption = interaction.options.getString("player-name");
 
@@ -340,6 +320,5 @@ module.exports = new Map([
   ["join", joinCmd],
   ["me", meCmd],
   ["edit", editCmd],
-  ["rankings", rankingsCmd],
   ["other", otherCmd],
 ]);

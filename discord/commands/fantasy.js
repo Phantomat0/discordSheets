@@ -38,9 +38,6 @@ module.exports = {
         )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("rankings").setDescription("View the fantasy rankings")
-    )
-    .addSubcommand((subcommand) =>
       subcommand
         .setName("other")
         .setDescription("View another player's team")

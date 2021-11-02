@@ -32,6 +32,18 @@ const SHEET_TABLES = {
     name: "fantasy-stats-all",
     range: "fantasy-stats-all!A1:G",
   },
+  FANTASY_CURRENT: {
+    name: "fantasy-currentweek",
+    range: "fantasy-currentweek!A1:G",
+  },
+  D1_STATS: {
+    name: "statsd1",
+    range: "statsd1!A1:L",
+  },
+  D2_STATS: {
+    name: "statsd2",
+    range: "statsd2!A1:L",
+  },
   TEST: {
     name: "stuff",
     range: "stuff!A1:B",
@@ -62,6 +74,30 @@ class MasterSheetManager {
 
   async getFantasyTeams() {
     return await this._sheet.listMany(this._sheetTables.FANTASY_TEAMS);
+  }
+
+  async getFantasyRankingsCurrentWeek() {
+    const fantasyPlayerRankings = await this._sheet.listMany(
+      this._sheetTables.FANTASY_CURRENT
+    );
+
+    // Only return the first twenty
+    const sortedRankings = fantasyPlayerRankings
+      .filter((player) => player.fantasy_points != 0)
+      .sort((a, b) => b.fantasy_points - a.fantasy_points)
+      .slice(0, 20);
+
+    const rankingTable = new AsciiTable().setHeading(
+      "Rank",
+      "Player",
+      "Total Points"
+    );
+
+    sortedRankings.forEach((player, index) => {
+      rankingTable.addRow(index + 1, player.player_name, player.fantasy_points);
+    });
+
+    return rankingTable.removeBorder().toString();
   }
 
   async getPlayerFantasy(playerID) {
@@ -98,6 +134,33 @@ class MasterSheetManager {
     });
 
     return rankingTable.removeBorder().toString();
+  }
+
+  async getPlayerStats(playerProfile) {
+    const statsProfileD1 = await this._sheet.findOne(
+      this._sheetTables.D1_STATS,
+      {
+        player_name: {
+          value: playerProfile.player_name,
+        },
+      },
+      false
+    );
+
+    const statsProfileD2 = await this._sheet.findOne(
+      this._sheetTables.D2_STATS,
+      {
+        player_name: {
+          value: playerProfile.player_name,
+        },
+      },
+      false
+    );
+
+    return {
+      statsProfileD1,
+      statsProfileD2,
+    };
   }
 
   async getFantasyPlayerRankingsTable() {
@@ -298,6 +361,10 @@ class MasterSheetManager {
         value: teamID,
       },
     });
+  }
+
+  async getTeams() {
+    return await this._sheet.listMany(this._sheetTables.TEAMS);
   }
 
   async updateTeamsManagers(teamID, newManagerArray) {
