@@ -1,5 +1,10 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
-const { INFORMATION_ID } = require("../config/channels");
+const {
+  INFORMATION_ID,
+  D1_ID,
+  D2_ID,
+  FANTASY_LEADERBOARD_ID,
+} = require("../config/channels");
 const {
   ANNOUNCEMENT_ROLE_ID,
   MEDIA_ROLE_ID,

@@ -1,0 +1,125 @@
+const { SlashCommandBuilder } = require("@discordjs/builders");
+const { MessageEmbed } = require("discord.js");
+const mainDatabase = require("../../database/main/main");
+const { GENERAL_ID } = require("../config/channels");
+const { CommandError } = require("../errors");
+
+const makeStatsEmbed = (statsProfile, teams, divisionID) => {
+  if (statsProfile === null) return null;
+  const {
+    player_name,
+    team_id,
+    games_played,
+    time_played,
+    goals,
+    assists,
+    own_goals,
+    cleansheets,
+    wins,
+    losses,
+    fantasy_points,
+  } = statsProfile;
+
+  const team = teams
+    .filter((team) => team.division_id === divisionID)
+    .find(
+      (team) => team.team_id == team_id || team.affiliate_team_id == team_id
+    );
+
+  const convertDurationToStr = (timeString) => {
+    const arr = timeString.split(":"); // splitting the string by colon
+
+    const [hours, minutes, seconds] = arr;
+
+    // Remove 0 pad
+
+    const hoursInt = hours.startsWith("0") ? hours.substring(1) : hours;
+    const minutesInt = minutes.startsWith("0") ? minutes.substring(1) : minutes;
+
+    return `${hoursInt.length > 0 ? `${hoursInt}hrs ` : ""}${minutesInt}min`;
+  };
+
+  const timeString = convertDurationToStr(time_played);
+
+  return new MessageEmbed()
+    .setTitle(`${player_name}'s Stats`)
+    .setDescription(
+      `**Division ${divisionID}**\nTeam: ${
+        team ? team.name : "Free Agent"
+      }\n\nGames Played: ${games_played}\nTime Played: ${timeString}`
+    )
+    .setColor(team?.color)
+    .setThumbnail(team?.logo_url)
+    .addFields(
+      { name: "Goals", value: goals, inline: true },
+      { name: "Assists", value: assists, inline: true },
+      { name: "Own Goals", value: own_goals, inline: true },
+      { name: "Cleansheets", value: cleansheets, inline: true },
+      { name: "W-L", value: `${wins}-${losses}`, inline: true },
+      { name: "Fantasy Points", value: fantasy_points, inline: true }
+    );
+};
+
+const getPlayerStatsEmbed = async (playerProfile) => {
+  const teams = await mainDatabase.getTeams();
+
+  const { statsProfileD1, statsProfileD2 } = await mainDatabase.getPlayerStats(
+    playerProfile
+  );
+
+  const d1StatsEmbed = makeStatsEmbed(statsProfileD1, teams, "1");
+  const d2StatsEmbed = makeStatsEmbed(statsProfileD2, teams, "2");
+
+  return [d1StatsEmbed, d2StatsEmbed].filter((x) => !!x);
+};
+
+module.exports = {
+  allowedRoles: [],
+  allowedChannels: [GENERAL_ID],
+  data: new SlashCommandBuilder()
+    .setName("stats")
+    .setDescription("View a player stats profile")
+    .addStringOption((option) =>
+      option.setName("player-name").setDescription("Player Name")
+    ),
+
+  async execute(interaction) {
+    const playerNameOption = interaction.options.getString("player-name");
+
+    const getSelfStats = playerNameOption === null;
+
+    const getStatsEmbedDependingOnOption = async () => {
+      if (getSelfStats) {
+        const playerProfile = await mainDatabase.getPlayerByDiscordID(
+          interaction.user.id
+        );
+
+        if (!playerProfile)
+          throw new CommandError(
+            "Invalid Player",
+            `You are not registered for the league`
+          );
+
+        return await getPlayerStatsEmbed(playerProfile);
+      }
+      console.log(playerNameOption);
+      const playerProfile = await mainDatabase.getPlayerByName(
+        playerNameOption
+      );
+
+      if (!playerProfile)
+        throw new CommandError(
+          "Invalid Player",
+          `Player **${playerNameOption}** does not exist`
+        );
+
+      return await getPlayerStatsEmbed(playerProfile);
+    };
+
+    const statsEmbeds = await getStatsEmbedDependingOnOption();
+
+    interaction.editReply({
+      embeds: statsEmbeds,
+    });
+  },
+};

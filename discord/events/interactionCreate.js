@@ -24,9 +24,9 @@ const handleCommand = async (interaction) => {
   const command = interaction.client.commands.get(interaction.commandName);
 
   if (!command) return;
+  await interaction.deferReply({ ephemeral: true });
 
   try {
-    await interaction.deferReply({ ephemeral: true });
     validateCommandRolesAndChannels(
       interaction,
       command.allowedRoles,
@@ -65,7 +65,7 @@ module.exports = {
   name: "interactionCreate",
   async execute(interaction) {
     const { customId } = interaction;
-    if (interaction.isCommand()) handleCommand(interaction);
+    if (interaction.isCommand()) await handleCommand(interaction);
     // if (interaction.isSelectMenu()) {
     //   const selectMenu = selectMenuInteractions.get(customId);
     //   if (!selectMenu) return;
