@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../../database/main/main");
 const { updateSignUpList } = require("../bot-util");
-const { successEmbed } = require("../embeds");
+const { successEmbedCreator } = require("../embeds");
 const { FREE_AGENT_ROLE_ID } = require("../config/roles");
 const { REGISTERED_ID } = require("../config/channels");
 
@@ -88,7 +88,7 @@ module.exports = {
 
     await interaction.editReply({
       embeds: [
-        successEmbed(
+        successEmbedCreator(
           "You are now signed up!",
           "If you need to remove your signup or modify it, please DM <@296070049062584321>"
         ),

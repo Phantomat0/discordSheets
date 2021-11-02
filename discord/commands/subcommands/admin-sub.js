@@ -27,8 +27,8 @@ const {
   GENERAL_MANAGER_ROLE_ID,
   ASSISTANT_MANAGER_ROLE_ID,
 } = require("../../config/roles");
-
-async function tradeCmd() {}
+const updateTeamRosters = require("../../updaterosters");
+const updateFantasy = require("../../updatefantasy");
 
 async function signCmd(interaction) {}
 
@@ -557,6 +557,7 @@ async function tradeCmd(interaction) {
         });
 
         sendInteractionCompleted(team2SelectInteraction);
+        updateTeamRosters(interaction.client);
       });
 
       // Make the confirm embed, confirm buttons
@@ -566,6 +567,8 @@ async function tradeCmd(interaction) {
 
 function updateEmbedsCmd(interaction) {
   updateSignUpList(interaction.client);
+  updateTeamRosters(interaction.client);
+  updateFantasy(interaction.client);
 
   const successEmbed = successEmbedCreator("Up to date!", "Embeds updated!");
 

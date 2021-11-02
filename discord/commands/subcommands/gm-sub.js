@@ -23,6 +23,7 @@ const { TRANSACTIONS_ID } = require("../../config/channels");
 const { CommandError, InvalidPermissionError } = require("../../errors");
 const { getCancelAndConfirmButtonRow } = require("../../buttons");
 const { successEmbedCreator } = require("../../embeds");
+const updateTeamRosters = require("../../updaterosters");
 
 const getTeamPlayersBasedOnManagerStatus = async (
   player_id,
@@ -313,6 +314,7 @@ async function signCmd(interaction) {
   });
 
   updateSignUpList(interaction.client);
+  updateTeamRosters(interaction.client);
 
   const filter = (i) =>
     i.user.id === interaction.user.id && i.customId === "signConfirm";
@@ -380,6 +382,7 @@ async function signCmd(interaction) {
     sendInteractionCompleted(interaction);
 
     updateSignUpList(interaction.client);
+    updateTeamRosters(interaction.client);
   });
 
   collector.on("end", (collected) => {
@@ -545,6 +548,7 @@ async function releaseCmd(interaction) {
       });
 
       updateSignUpList(interaction.client);
+      updateTeamRosters(interaction.client);
 
       sendInteractionCompleted(buttonInteraction);
     });
