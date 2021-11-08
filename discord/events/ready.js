@@ -1,15 +1,12 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
-const {
-  INFORMATION_ID,
-  D1_ID,
-  D2_ID,
-  FANTASY_LEADERBOARD_ID,
-} = require("../config/channels");
+const mainDatabase = require("../../database/main/main");
+const { INFORMATION_ID } = require("../config/channels");
 const {
   ANNOUNCEMENT_ROLE_ID,
   MEDIA_ROLE_ID,
   SCORES_ROLE_ID,
 } = require("../config/roles");
+const { CommandError } = require("../errors");
 const {
   WavingHand,
   PageCurled,
@@ -17,6 +14,156 @@ const {
   QuestionMark,
   Bell,
 } = require("../icons");
+const { getCancelAndConfirmButtonRow } = require("../buttons");
+const { successEmbedCreator } = require("../embeds");
+const {
+  sendInteractionCompleted,
+  sendInteractionTimedOut,
+} = require("../bot-util");
+
+const updateTournyPlayers = require("../updatetourny");
+const muteChecker = require("../mutechecker");
+async function startSixMan(client) {
+  return;
+  const signUpButton = new MessageActionRow().addComponents(
+    new MessageButton()
+      .setCustomId("sixManSignUp")
+      .setStyle("PRIMARY")
+      .setLabel("Sign me up!")
+  );
+
+  const signUpEmbed = new MessageEmbed()
+    .setTitle("6 Man Rambo Signups!")
+    .setDescription(
+      "Sign up by clicking the button below!\n\n*Note: You must be signed up for the current season to be eligible to participate.*"
+    );
+
+  const SIXMAN_REGISTER_CHANNEL_ID = "905133164744310864";
+
+  const currentChannel = await client.channels.cache.get(
+    SIXMAN_REGISTER_CHANNEL_ID
+  );
+
+  await client.channels.cache.get(SIXMAN_REGISTER_CHANNEL_ID).send({
+    embeds: [signUpEmbed],
+  });
+
+  await client.channels.cache.get(SIXMAN_REGISTER_CHANNEL_ID).send({
+    embeds: [signUpEmbed],
+    components: [signUpButton],
+  });
+
+  const signUpFilter = (ir) => ir.customId === "sixManSignUp";
+
+  const collector = currentChannel.createMessageComponentCollector({
+    filter: signUpFilter,
+    componentType: "BUTTON",
+  });
+
+  collector.on("collect", async (buttonInteraction) => {
+    const playerProfile = await mainDatabase.getPlayerByDiscordID(
+      buttonInteraction.user.id
+    );
+
+    try {
+      // First, check if this player is registered for the league
+
+      if (!playerProfile)
+        throw new CommandError(
+          "Ineligible Signup",
+          "You must be registered for the current season in order to play in this tournament"
+        );
+
+      const isSignedUp = await mainDatabase.checkIfSignedUpTournament(
+        playerProfile.player_id
+      );
+
+      if (isSignedUp)
+        throw new CommandError(
+          "Ineligible Signup",
+          "You are already signed up for this tournament."
+        );
+    } catch (error) {
+      const getErrorEmbed = () => {
+        if (error.type) {
+          return new MessageEmbed()
+            .setColor(error.color)
+            .setTitle(error.name)
+            .setDescription(error.getMessage());
+        } else {
+          console.log(error);
+          return new MessageEmbed()
+            .setColor("#C70039")
+            .setTitle(`${Warning} Command Error`)
+            .setDescription("There was an error while executing this command!");
+        }
+      };
+
+      console.log("ERROR");
+
+      const errorEmbed = getErrorEmbed();
+
+      await buttonInteraction.reply({
+        embeds: [errorEmbed],
+        ephemeral: true,
+      });
+
+      return;
+    }
+
+    // Ok now show the confirm buttons
+
+    const confirmEmbed = new MessageEmbed()
+      .setColor("#f5dd42")
+      .setTitle(`Confirm tournament entry`)
+      .setDescription(`Are you sure you want to play in this tournament?`);
+
+    const confirmCancelButtons = getCancelAndConfirmButtonRow("sixManConfirm");
+
+    buttonInteraction.reply({
+      ephemeral: true,
+      embeds: [confirmEmbed],
+      components: [confirmCancelButtons],
+    });
+
+    const buttonConfirmFilter = (ir) =>
+      ir.user.id === buttonInteraction.user.id &&
+      ir.customId === "sixManConfirm";
+
+    const buttonConfirmCollector =
+      buttonInteraction.channel.createMessageComponentCollector({
+        filter: buttonConfirmFilter,
+        componentType: "BUTTON",
+        time: 15000,
+        max: 1,
+      });
+
+    buttonConfirmCollector.on("collect", async (confirmInteraction) => {
+      const discordMember = confirmInteraction.member;
+
+      const SIX_MAN_ROLE_ID = "905116192501547058";
+
+      discordMember.roles.add(SIX_MAN_ROLE_ID);
+
+      sendInteractionCompleted(buttonInteraction);
+      const successEmbed = successEmbedCreator("Successfully signed up!");
+
+      await mainDatabase.registerPlayerTournament(playerProfile);
+
+      await updateTournyPlayers(confirmInteraction.client);
+
+      confirmInteraction.reply({
+        ephemeral: true,
+        embeds: [successEmbed],
+      });
+    });
+
+    buttonConfirmCollector.on("end", async (collected) => {
+      if (collected.size >= 1) return;
+      sendInteractionTimedOut(buttonInteraction);
+    });
+  });
+}
 
 async function sendInformation(client) {
   const rolePings = new MessageActionRow().addComponents(
@@ -144,11 +291,24 @@ async function sendInformation(client) {
   });
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 module.exports = {
   name: "ready",
   once: true,
   async execute(client) {
     console.log("Ready!");
+
+    startSixMan(client);
+
+    while (true) {
+      await muteChecker(client);
+      await delay(6000);
+    }
+
+    // setInterval(mutechecker, 60000, client);
 
     // sendInformation(client);
 
