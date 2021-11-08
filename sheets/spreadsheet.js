@@ -267,8 +267,13 @@ class SpreadSheet {
 
     const [tableHeaders, ...tableData] = values;
 
+    // Remove empty rows
+    const tableValidValues = tableData.filter(
+      (row) => Object.keys(row).length !== 0
+    );
+
     // Format the tableData as an array of objects, with tableHeaders as the keys for each object
-    const mappedData = tableData.map((player) => {
+    const mappedData = tableValidValues.map((player) => {
       return player.reduce((acc, val, index) => {
         acc[tableHeaders[index]] = val;
         return acc;
