@@ -7,6 +7,10 @@ const {
   REGISTERED_LIST_MESSAGE_ID,
 } = require("./config/channels");
 
+const plural = (number, singular, plural) => {
+  return `${number} ${number === 1 ? singular : plural}`;
+};
+
 const sendInteractionCompleted = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle(
     ` ${ThumbsUp} Command Complete!`
@@ -93,12 +97,12 @@ async function updateSignUpList(client) {
 
   const mapToSignUpList = (playerArray) => {
     return playerArray.map((signUpObj) => {
-      const { player_id, player_display_name, availability, position } =
-        signUpObj;
+      const { player_id, player_display_name } = signUpObj;
       const { discord_id } = players.find(
         (player) => player.player_id === player_id
       );
-      return `${player_display_name} <@${discord_id}> \`${availability}\` \`${position}\``;
+      // return `${player_display_name} <@${discord_id}> \`${availability}\` \`${position}\``;
+      return `${player_display_name} <@${discord_id}>`;
     });
   };
 
@@ -114,7 +118,7 @@ async function updateSignUpList(client) {
         waiverPlayersMapped.length
       }**\n${waiverPlayersMapped.join("\n")}\n\n**Free Agents: ${
         freeAgentPlayersMapped.length
-      }**\n${freeAgentPlayersMapped.join("\n")}`
+      }**\n${freeAgentPlayersMapped.join("\n")}]`
     );
 
   await client.channels.cache
@@ -195,4 +199,5 @@ module.exports = {
   sendInteractionTimedOut,
   addDiscordRole,
   removeDiscordRole,
+  plural,
 };
