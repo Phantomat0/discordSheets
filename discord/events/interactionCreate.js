@@ -1,6 +1,7 @@
 const { MessageEmbed } = require("discord.js");
 const { Warning } = require("../icons");
 const { validateCommandRolesAndChannels } = require("../bot-util");
+const { BOT_ERROR_ID } = require("../config/channels");
 
 const buttonInteractions = new Map([
   [
@@ -42,7 +43,11 @@ const handleCommand = async (interaction) => {
           .setTitle(error.name)
           .setDescription(error.getMessage());
       } else {
-        console.log(error);
+        interaction.client.channels.cache.get(BOT_ERROR_ID).send({
+          content: error.message,
+        });
+
+        console.log(error, "yup");
         return new MessageEmbed()
           .setColor("#C70039")
           .setTitle(`${Warning} Command Error`)

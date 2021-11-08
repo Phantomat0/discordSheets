@@ -4,10 +4,13 @@ const { GreenCheck } = require("./icons");
 const EmbedGenerator = (options) => {
   const { color = "", emoji = "" } = options;
   return (title, description = null) => {
-    return new MessageEmbed()
+    const embed = new MessageEmbed()
       .setColor(color)
-      .setTitle(`${emoji} ${title}`)
-      .setDescription(`${description}`);
+      .setTitle(`${emoji} ${title}`);
+    if (description) {
+      embed.setDescription(`${description}`);
+    }
+    return embed;
   };
 };
 

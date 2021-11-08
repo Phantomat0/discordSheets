@@ -33,7 +33,6 @@ async function updateFantasy(client) {
     .get(FANTASY_LEADERBOARD_ID)
     .messages.fetch(FANTASY_MESSAGE_ID)
     .then((message) => {
-      console.log(message);
       message.edit({
         embeds: [
           playerRankingsThisWeekEmbed,

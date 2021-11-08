@@ -47,9 +47,9 @@ const generateTeamEmbed = async (teamProfile, teamRoster, players) => {
   const { generalManagerID, assistantManagerIDs } =
     getTeamManagerIDs(teamProfile);
 
-  const generalManagerNameProfile = await mainDatabase.getPlayer(
-    generalManagerID
-  );
+  const generalManagerNameProfile = generalManagerID
+    ? await mainDatabase.getPlayer(generalManagerID)
+    : null;
 
   const assistantManagersMappedStr = assistantManagerIDs
     .map((playerID) => {

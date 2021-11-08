@@ -15,10 +15,7 @@ const {
   sendInteractionTimedOut,
   sendMessageIfValidUser,
 } = require("../../bot-util");
-const {
-  getCancelAndConfirmButtonRow,
-  getCancelAndNextButtonRow,
-} = require("../../buttons");
+const { getCancelAndConfirmButtonRow } = require("../../buttons");
 const { successEmbedCreator } = require("../../embeds");
 const { CommandError } = require("../../errors");
 const { TRANSACTIONS_ID, TRADES_ID } = require("../../config/channels");
