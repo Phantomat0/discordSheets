@@ -52,6 +52,14 @@ const SHEET_TABLES = {
     name: "config",
     range: "config!A1:H2",
   },
+  TOURNAMENT: {
+    name: "tournament",
+    range: "tournament!A1:B",
+  },
+  MUTED: {
+    name: "muted",
+    range: "muted!A1:H",
+  },
 };
 
 class MasterSheetManager {
@@ -244,6 +252,32 @@ class MasterSheetManager {
     ]);
   }
 
+  async getTournyPlayers() {
+    return this._sheet.listMany(this._sheetTables.TOURNAMENT);
+  }
+
+  async checkIfSignedUpTournament(playerID) {
+    const signUp = await this._sheet.findOne(
+      this._sheetTables.TOURNAMENT,
+      {
+        player_id: {
+          value: playerID,
+        },
+      },
+      false
+    );
+
+    if (signUp) return true;
+    return false;
+  }
+
+  async registerPlayerTournament(playerProfile) {
+    await this._sheet.write(this._sheetTables.TOURNAMENT, [
+      playerProfile.player_id,
+      playerProfile.player_name,
+    ]);
+  }
+
   async placeWaiverClaim(
     teamID,
     managerID,
@@ -425,10 +459,52 @@ class MasterSheetManager {
     });
   }
 
+  async getMutedUsers() {
+    return await this._sheet.listMany(this._sheetTables.MUTED);
+  }
+
+  async addUserToMuted({
+    muted_id,
+    muted_name,
+    muted_by_id,
+    muted_by_name,
+    time_of_mute,
+    reason,
+    duration,
+    info,
+  }) {
+    await this._sheet.write(this._sheetTables.MUTED, [
+      muted_id,
+      muted_name,
+      muted_by_id,
+      muted_by_name,
+      time_of_mute,
+      reason,
+      duration,
+      info,
+    ]);
+  }
+
+  async removeMutedUser(discordID) {
+    // This works by making all the values for a row empty
+    return await this._sheet.findOneAndUpdate(
+      SHEET_TABLES.MUTED,
+      ["", "", "", "", "", "", "", ""],
+      {
+        discord_id: {
+          value: discordID,
+        },
+      },
+      { header: "discord_id" }
+    );
+  }
+
   async getLastestPlayerID() {
     const playersArray = (await this.getPlayers()) ?? [];
 
-    return playersArray.length;
+    const lastPlayer = playersArray[playersArray.length - 1];
+
+    return parseInt(lastPlayer.player_id);
   }
 
   async registerSignUp(signUpObj) {
