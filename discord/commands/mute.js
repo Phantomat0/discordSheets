@@ -120,14 +120,16 @@ module.exports = {
     );
 
     const muteEmbed = new MessageEmbed()
-      .setColor("RED")
-      .setTitle(`${discordMember.user.username} has been muted`)
+      .setColor("#f7e811")
+      .setTitle(`Mute`)
       .setDescription(
-        `**Reason:** ${infraction.name}\n\n**By:** ${
-          interaction.user.username
-        }\n**Duration:** ${plural(infraction.duration, "hour", "hours")}${
-          infoOption ? `\n**Info:** ${infoOption}` : ""
-        }`
+        `**User:**<@${discordMember.user.id}>\n**Reason:** ${
+          infraction.name
+        }\n\n**By:** <@${interaction.user.id}>\n**Duration:** ${plural(
+          infraction.duration,
+          "hour",
+          "hours"
+        )}${infoOption ? `\n**Info:** ${infoOption}` : ""}`
       );
 
     const muted = await mainDatabase.getMutedUsers();
@@ -147,11 +149,12 @@ module.exports = {
 
     interaction.editReply({
       embeds: [successEmbed],
+      ephemeral: false,
     });
 
-    interaction.followUp({
-      embeds: [muteEmbed],
-    });
+    // interaction.followUp({
+    //   embeds: [successEmbed],
+    // });
 
     interaction.client.channels.cache.get(MOD_LOG_ID).send({
       content: `<@${discordMember.user.id}>`,

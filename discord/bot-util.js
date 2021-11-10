@@ -162,8 +162,9 @@ const getDateTimeString = () => {
   });
 };
 
-const getDiscordMember = async (interaction, discordID) => {
+const getDiscordMember = async (interaction, discordID, guild) => {
   try {
+    if (!interaction) return guild.members.fetch(discordID);
     return await interaction.guild.members.fetch(discordID);
   } catch (error) {
     return null;

@@ -1,10 +1,14 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const mainDatabase = require("../../database/main/main");
-const { INFORMATION_ID } = require("../config/channels");
+const { INFORMATION_ID, REGISTRATION_ID } = require("../config/channels");
+const { LOGO_URL } = require("../config/logo");
+const { GUILD_ID } = require("../config/config");
 const {
   ANNOUNCEMENT_ROLE_ID,
   MEDIA_ROLE_ID,
   SCORES_ROLE_ID,
+  MODERATOR_ROLE_ID,
+  DONATOR_ROLE_ID,
 } = require("../config/roles");
 const { CommandError } = require("../errors");
 const {
@@ -13,6 +17,8 @@ const {
   SmallWhiteSquare,
   QuestionMark,
   Bell,
+  MoneyBag,
+  Abascus,
 } = require("../icons");
 const { getCancelAndConfirmButtonRow } = require("../buttons");
 const { successEmbedCreator } = require("../embeds");
@@ -181,43 +187,79 @@ async function sendInformation(client) {
       .setStyle("PRIMARY")
   );
 
-  const embed1 = new MessageEmbed()
-    .setTitle(`${WavingHand} Welcome to American Futsal!`)
+  const welcomeEmbed = new MessageEmbed()
+    .setAuthor(
+      "Official Website",
+      LOGO_URL,
+      "https://www.youtube.com/watch?v=UALYfVCLlYM"
+    )
+    .setTitle(`${WavingHand}  Welcome to American Futsal!`)
     .setColor("#FF0055")
-    .setDescription("North America's most profound futsal league!");
+    .setDescription(
+      "North America's most profound futsal league!\n\nWe are a competitive 4v4 haxball league with two divisions and biweekly games. Additionally, we offer a 4v4 competitive ELO public room, a casual 3v3 room, and a 1v1 room."
+    );
 
-  const embed2 = new MessageEmbed()
+  const rulesArray = [
+    "Spam",
+    "Offensive nicknames",
+    "Excessive mentioning of users and roles",
+    "Links to dangerous or explicit websites",
+    "Sexually explicit content",
+    "Hate speech or racial slurs",
+    "Images of gore and/or animal cruelty",
+    "Harassment",
+    "Advertising of other servers or websites",
+    "Dox attempts or threats",
+    "Threats of violence",
+  ];
+
+  const rulesStr = rulesArray
+    .map((rule) => `${SmallWhiteSquare} ${rule}`)
+    .join("\n\n");
+  await client.guilds.cache.get(GUILD_ID).members.fetch();
+
+  const moderatorsIdArray = await client.guilds.cache
+    .get(GUILD_ID)
+    .roles.cache.get(MODERATOR_ROLE_ID)
+    .members.map((m) => m.user.id);
+
+  const adminsArray = [
+    {
+      name: "TDA",
+      discordID: "296070049062584321",
+    },
+    {
+      name: "Creed",
+      discordID: "732074447699181609",
+    },
+    {
+      name: "salah",
+      discordID: "391356195870605315",
+    },
+  ];
+
+  const moderatorListStr = moderatorsIdArray.map((id) => `<@${id}>`).join("\n");
+  const adminListStr = adminsArray
+    .map((admin) => `${admin.name} <@${admin.discordID}>`)
+    .join("\n");
+  const staffEmbed = new MessageEmbed()
+    .setTitle(`${Abascus}  Staff`)
+    .setColor("#3f9630")
+    .setDescription(
+      `Want a clarification on rules? Want to report in game rule breaking? Contact an Admin.\n\nWant to report misconduct in the Discord, feel uncomortable or threatned, or just need any Discord help? Contact the moderator team and let them know.\n\n**Admins**\n${adminListStr}\n\n**Moderators**\n${moderatorListStr}`
+    );
+
+  const rulesEmbed = new MessageEmbed()
     .setTitle(`${PageCurled} Rules`)
-    .setColor("#badc58").setDescription(`
-      ${SmallWhiteSquare} Spamming
+    .setColor("#d9dbda")
+    .setDescription(rulesStr);
 
-      ${SmallWhiteSquare} Offensive nicknames
-
-      ${SmallWhiteSquare} Excessive mentioning of users and roles
-
-      ${SmallWhiteSquare} Links to dangerous and explicit websites
-
-      ${SmallWhiteSquare} Sexually explicit content.
-
-      ${SmallWhiteSquare} Hate speech
-
-      ${SmallWhiteSquare} Images of gore and/or animal cruelty.
-
-      ${SmallWhiteSquare} Sexual Harassment
-
-      ${SmallWhiteSquare} Racial slurs intentionally used to offend a member(s)
-
-      ${SmallWhiteSquare} Dox attempts and threats
-
-      ${SmallWhiteSquare} Threats of violence
-  `);
-
-  const embed3 = new MessageEmbed()
+  const faqEmbed = new MessageEmbed()
     .setTitle(`${QuestionMark} FAQ`)
-    .setColor("#686de0")
+    .setColor("#f52727")
     .addField(
       "How do I join a team?",
-      `To join a team, you must first register for the league. Begin by going to <#892959251788615712> and using the /register command and filling out the form. From there, you wait to be picked up by a team.`,
+      `To join a team, you must first register for the league. Begin by going to <#${REGISTRATION_ID}> and using the /register command and filling out the form. From there, you wait to be picked up by a team.`,
       false
     )
     .addField(
@@ -227,7 +269,7 @@ async function sendInformation(client) {
     )
     .addField(
       "When are games played?",
-      `D1: Tuesdays and Thursdays 7PM EST \n D2: Tuesdays and Thursdays 6PM EST`,
+      `**D1** Tuesdays and Thursdays 7PM EST \n **D2** Tuesdays and Thursdays 6PM EST`,
       false
     )
     .addField(
@@ -241,20 +283,47 @@ async function sendInformation(client) {
       false
     )
     .addField(
+      "I was banned from one of the public rooms, how do I get unbanned?",
+      `Post an appeal in <#895420435586482206> and patiently wait for a reply from a pub admin.`,
+      false
+    )
+    .addField(
       "Who do I contact regarding an issue with the Discord?",
-      `Any issues or concerns regarding the Discord should be forwared to a @Moderator`,
+      `Any issues or concerns regarding the Discord should be forwared to any of the moderators listed above in the rules section. `,
+      false
+    )
+    .addField(
+      "Can I partner with this server and or advertise my own server here?",
+      `No, AF server does not and will not partner with servers, will not advertise your server, and does not allow for server promotion in any of its channels.`,
       false
     );
 
-  const embed4 = new MessageEmbed()
+  const CREED_DISCORD_ID = "732074447699181609";
+  const PATREON_LINK = "https://www.patreon.com/creedhaxball";
+
+  const donationEmbed = new MessageEmbed()
+    .setTitle(`${MoneyBag} Donations`)
+    .setColor("#badc58")
+    .setDescription(
+      `All public rooms, private matchrooms, and the website are fully hosted and coded by <@${CREED_DISCORD_ID}>. Although these services are provided free of charge, servers to run rooms and is an ongoing charge that eventually comes out of <@${CREED_DISCORD_ID}>'s pockets. \n\nTo help cover these charges, we offer a [donation pool](${PATREON_LINK}) in which all funds go to covering hosting fees. Although we will never force players to pay for our services, we kindly appreciate any sincere and generous donations. As a sign of our appreciation, donators will receive a few perks for their generosity: \n${SmallWhiteSquare} Special tag in rooms\n ${SmallWhiteSquare} Discord role <@${DONATOR_ROLE_ID}>\n${SmallWhiteSquare} Exclusive insight into future updates.\n\nContact <@${CREED_DISCORD_ID}> to confirm your donation and receive these perks. Thank you for your generosity.`
+    );
+
+  const notificationsEmbed = new MessageEmbed()
     .setTitle(`${Bell} Notifications`)
     .setColor("#FFAD33")
-    .setDescription(`No one likes constant pings, thats why we only @everyone for league wide announcements.
-
-    Click the appropriate button if you would like to be notified of other smaller announcements. Click again to remove the notification role.`);
+    .setDescription(
+      `No one likes constant pings, thats why we only @everyone for league wide announcements.\n\nClick the appropriate button if you would like to be notified of other smaller announcements. Click again to remove the notification role.`
+    );
 
   await client.channels.cache.get(INFORMATION_ID).send({
-    embeds: [embed1, embed2, embed3, embed4],
+    embeds: [
+      welcomeEmbed,
+      rulesEmbed,
+      faqEmbed,
+      staffEmbed,
+      donationEmbed,
+      notificationsEmbed,
+    ],
     components: [rolePings],
   });
 
@@ -291,7 +360,7 @@ async function sendInformation(client) {
   });
 }
 
-function delay(ms) {
+function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -301,16 +370,14 @@ module.exports = {
   async execute(client) {
     console.log("Ready!");
 
-    startSixMan(client);
+    // startSixMan(client);
 
     while (true) {
       await muteChecker(client);
-      await delay(6000);
+      await sleep(6000);
     }
 
-    // setInterval(mutechecker, 60000, client);
-
-    // sendInformation(client);
+    sendInformation(client);
 
     // const signedUpPlayersEmbed = new MessageEmbed().setTitle("HEY!!!");
 

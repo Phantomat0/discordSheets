@@ -63,6 +63,8 @@ const ICONS = {
   OkHand: String.fromCodePoint(0x1f44c),
   FileFolder: String.fromCodePoint(0x1f4c1),
   Balance: String.fromCodePoint(0x2696),
+  MoneyBag: String.fromCodePoint(0x1f4b0),
+  Abascus: String.fromCodePoint(0x1f9ee),
 };
 
 module.exports = ICONS;

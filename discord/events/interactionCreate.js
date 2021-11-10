@@ -47,7 +47,7 @@ const handleCommand = async (interaction) => {
           content: error.message,
         });
 
-        console.log(error, "yup");
+        console.log(error);
         return new MessageEmbed()
           .setColor("#C70039")
           .setTitle(`${Warning} Command Error`)
