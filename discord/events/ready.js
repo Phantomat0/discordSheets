@@ -25,7 +25,7 @@ const { successEmbedCreator } = require("../utils/embeds");
 const {
   sendInteractionCompleted,
   sendInteractionTimedOut,
-} = require("../bot-util");
+} = require("../utils/bot-utils");
 
 const updateTournyPlayers = require("../updatetourny");
 const muteChecker = require("../mutechecker");
