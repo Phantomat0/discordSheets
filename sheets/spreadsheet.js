@@ -123,6 +123,8 @@ class SpreadSheet {
   }
 
   async findOneAndUpdate(sheet, valueArray, filterQueryObj, updateQuery) {
+    let rowToUpdate = null;
+
     const determineRange = async () => {
       const { range, name } = sheet;
 
@@ -164,6 +166,8 @@ class SpreadSheet {
 
           // Our filtered data will always be an array, since its a findOne, we return the first value
           const [filterResult] = filteredData;
+
+          rowToUpdate = filterResult;
 
           // Now that we found the row, we need to find the column(s)
 
@@ -235,6 +239,8 @@ class SpreadSheet {
         values: [valueArray],
       },
     });
+
+    return rowToUpdate;
   }
 
   async listOne({ range }) {
