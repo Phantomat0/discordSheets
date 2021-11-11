@@ -2,7 +2,8 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const { MOD_LOG_ID } = require("../config/channels");
 const { CommandError } = require("../errors");
-const { getDiscordMember, plural } = require("../bot-util");
+const { plural, getDateTimeString } = require("../bot-util");
+const { Silence } = require("../icons");
 const { MUTED_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../embeds");
 const mainDatabase = require("../../database/main/main");
@@ -10,8 +11,6 @@ const mainDatabase = require("../../database/main/main");
 async function validateMute(interaction, discordMember) {
   // These roles cannot be muted
   const SAFE_ROLES = ["Admin", "Moderator", "Bot"];
-
-  console.log(discordMember);
 
   // Cant mute yourself
   if (interaction.user.id === discordMember.user.id)
@@ -37,12 +36,10 @@ async function validateMute(interaction, discordMember) {
     (role) => role.name === "muted"
   );
 
-  console.log(isMuted);
-
   if (isMuted) throw new CommandError("Cannot Mute", "User is already muted");
 }
 
-const infractions = {
+const INFRACTIONS = {
   spam: {
     name: "Spamming",
     duration: 1,
@@ -102,37 +99,46 @@ module.exports = {
   async execute(interaction) {
     const { options } = interaction;
 
-    const userOption = options.getUser("target-user");
+    const discordMember = options.getMember("target-user");
     const infractionTypeOption = options.getString("infraction");
     const infoOption = options.getString("info");
-
-    const discordMember = await getDiscordMember(interaction, userOption.id);
 
     await validateMute(interaction, discordMember);
 
     discordMember.roles.add(MUTED_ROLE_ID);
 
-    const infraction = infractions[infractionTypeOption];
+    const infraction = INFRACTIONS[infractionTypeOption];
 
     const successEmbed = successEmbedCreator(
-      "Successful Mute!",
-      `${discordMember.user.username} has been muted`
+      "Successfully Muted!",
+      `<@${discordMember.user.id}> has been muted`
     );
 
+    const timeStamp = getDateTimeString();
+
     const muteEmbed = new MessageEmbed()
-      .setColor("#f7e811")
+      .setColor("RED")
       .setTitle(`Mute`)
       .setDescription(
-        `**User:**<@${discordMember.user.id}>\n**Reason:** ${
+        `**User:** <@${discordMember.user.id}>\n**Reason:** ${
           infraction.name
         }\n\n**By:** <@${interaction.user.id}>\n**Duration:** ${plural(
           infraction.duration,
           "hour",
           "hours"
-        )}${infoOption ? `\n**Info:** ${infoOption}` : ""}`
+        )}${infoOption ? `\n**Info:** ${infoOption}` : ""}\n\n*${timeStamp}*`
       );
 
-    const muted = await mainDatabase.getMutedUsers();
+    await interaction.editReply({
+      embeds: [successEmbed],
+    });
+
+    const modLogMessage = await interaction.client.channels.cache
+      .get(MOD_LOG_ID)
+      .send({
+        content: `<@${discordMember.user.id}>`,
+        embeds: [muteEmbed],
+      });
 
     mainDatabase.addUserToMuted({
       muted_id: discordMember.user.id,
@@ -143,24 +149,19 @@ module.exports = {
       reason: infraction.name,
       duration: infraction.duration,
       info: infoOption,
+      message_link: modLogMessage.url,
     });
 
-    console.log(muted);
+    const muteChannelEmbed = new MessageEmbed()
+      .setTitle(`${Silence} User has been muted`)
+      .setURL(modLogMessage.url)
+      .setColor("RED")
+      .setDescription(
+        `<@${discordMember.user.id}> was muted by <@${interaction.user.id}>`
+      );
 
-    interaction.editReply({
-      embeds: [successEmbed],
-      ephemeral: false,
+    interaction.followUp({
+      embeds: [muteChannelEmbed],
     });
-
-    // interaction.followUp({
-    //   embeds: [successEmbed],
-    // });
-
-    interaction.client.channels.cache.get(MOD_LOG_ID).send({
-      content: `<@${discordMember.user.id}>`,
-      embeds: [muteEmbed],
-    });
-
-    // Now send to the mod log channel, and send the user a DM notifying them of their mute
   },
 };

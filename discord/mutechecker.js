@@ -14,18 +14,15 @@ async function muteChecker(client) {
     const timeOfMute = parseInt(mutedUser.time_of_mute);
 
     // Get the duration in hours in ms
-    const msMuted = parseInt(mutedUser.duration) * 60000;
+    const msMuted = parseInt(mutedUser.duration) * 360000;
     const timeOfUnmute = timeOfMute + msMuted;
 
     const muteExpired = currrentTime > timeOfUnmute;
 
-    console.log({ msMuted });
-    console.log(timeOfUnmute, currrentTime);
-    console.log(muteExpired, mutedUser.discord_name);
-
     if (muteExpired) {
       // Remove from database
       mainDatabase.removeMutedUser(mutedUser.discord_id);
+
       // Remove the role from the user, only if the user is still in the discord
       const discordMember = await getDiscordMember(
         null,
@@ -36,19 +33,18 @@ async function muteChecker(client) {
         discordMember.roles.remove(MUTED_ROLE_ID);
 
         const unmutedEmbed = new MessageEmbed()
-          .setColor("#f77c11")
+          .setColor("GREEN")
           .setTitle(`Unmute`)
           .setDescription(
-            `**User:**<@${discordMember.user.id}>\n**By:** Bot Expired`
+            `**User:**<@${discordMember.user.id}>\n**By:** <@${client.user.id}> (Mute Expired)`
           );
 
+        // Send message to Mod Log Channel
         await client.channels.cache.get(MOD_LOG_ID).send({
           content: `<@${mutedUser.discord_id}>`,
           embeds: [unmutedEmbed],
         });
       }
-
-      // Send message to Mod Log Channel
     }
   });
 }
