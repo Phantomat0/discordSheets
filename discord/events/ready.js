@@ -369,6 +369,7 @@ module.exports = {
   once: true,
   async execute(client) {
     console.log("Ready!");
+    console.log(client);
 
     // startSixMan(client);
 
@@ -377,7 +378,7 @@ module.exports = {
       await sleep(6000);
     }
 
-    sendInformation(client);
+    // sendInformation(client);
 
     // const signedUpPlayersEmbed = new MessageEmbed().setTitle("HEY!!!");
 

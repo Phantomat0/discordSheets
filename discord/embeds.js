@@ -6,7 +6,7 @@ const EmbedGenerator = (options) => {
   return (title, description = null) => {
     const embed = new MessageEmbed()
       .setColor(color)
-      .setTitle(`${emoji} ${title}`);
+      .setTitle(`${emoji}  ${title}`);
     if (description) {
       embed.setDescription(`${description}`);
     }

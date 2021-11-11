@@ -101,7 +101,6 @@ async function updateSignUpList(client) {
       const { discord_id } = players.find(
         (player) => player.player_id === player_id
       );
-      // return `${player_display_name} <@${discord_id}> \`${availability}\` \`${position}\``;
       return `${player_display_name} <@${discord_id}>`;
     });
   };
@@ -118,7 +117,7 @@ async function updateSignUpList(client) {
         waiverPlayersMapped.length
       }**\n${waiverPlayersMapped.join("\n")}\n\n**Free Agents: ${
         freeAgentPlayersMapped.length
-      }**\n${freeAgentPlayersMapped.join("\n")}]`
+      }**\n${freeAgentPlayersMapped.join("\n")}`
     );
 
   await client.channels.cache
@@ -159,12 +158,13 @@ const getDateTimeString = () => {
     hour: "numeric",
     minute: "numeric",
     timeZoneName: "short",
+    timeZone: "America/Chicago",
   });
 };
 
 const getDiscordMember = async (interaction, discordID, guild) => {
   try {
-    if (!interaction) return guild.members.fetch(discordID);
+    if (!interaction) return await guild.members.fetch(discordID);
     return await interaction.guild.members.fetch(discordID);
   } catch (error) {
     return null;

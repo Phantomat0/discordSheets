@@ -58,7 +58,7 @@ const SHEET_TABLES = {
   },
   MUTED: {
     name: "muted",
-    range: "muted!A1:H",
+    range: "muted!A1:I",
   },
 };
 
@@ -472,6 +472,7 @@ class MasterSheetManager {
     reason,
     duration,
     info,
+    message_link,
   }) {
     await this._sheet.write(this._sheetTables.MUTED, [
       muted_id,
@@ -482,6 +483,7 @@ class MasterSheetManager {
       reason,
       duration,
       info,
+      message_link,
     ]);
   }
 
@@ -489,7 +491,7 @@ class MasterSheetManager {
     // This works by making all the values for a row empty
     return await this._sheet.findOneAndUpdate(
       SHEET_TABLES.MUTED,
-      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", "", ""],
       {
         discord_id: {
           value: discordID,
