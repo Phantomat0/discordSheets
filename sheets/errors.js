@@ -1,4 +1,4 @@
-const { FileFolder } = require("../discord/icons");
+const { FileFolder } = require("../discord/utils/icons");
 
 class SheetError {
   constructor(type, message) {

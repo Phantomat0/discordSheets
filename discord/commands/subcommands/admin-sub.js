@@ -15,11 +15,11 @@ const {
   sendInteractionTimedOut,
   sendMessageIfValidUser,
 } = require("../../bot-util");
-const { getCancelAndConfirmButtonRow } = require("../../buttons");
-const { successEmbedCreator } = require("../../embeds");
+const { getCancelAndConfirmButtonRow } = require("../../utils/buttons");
+const { successEmbedCreator } = require("../../utils/embeds");
 const { CommandError } = require("../../errors");
 const { TRANSACTIONS_ID, TRADES_ID } = require("../../config/channels");
-const { Balance } = require("../../icons");
+const { Balance } = require("../../utils/icons");
 const {
   GENERAL_MANAGER_ROLE_ID,
   ASSISTANT_MANAGER_ROLE_ID,

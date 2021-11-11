@@ -1,5 +1,5 @@
 const mainDatabase = require("../database/main/main");
-const { ThumbsUp } = require("./icons");
+const { ThumbsUp } = require("./utils/icons");
 const { MessageEmbed } = require("discord.js");
 const { InvalidPermissionError } = require("./errors");
 const {

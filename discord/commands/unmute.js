@@ -4,7 +4,7 @@ const { MOD_LOG_ID } = require("../config/channels");
 const { CommandError } = require("../errors");
 const { getDateTimeString } = require("../bot-util");
 const { MUTED_ROLE_ID } = require("../config/roles");
-const { successEmbedCreator } = require("../embeds");
+const { successEmbedCreator } = require("../utils/embeds");
 const mainDatabase = require("../../database/main/main");
 
 async function validateMute(interaction, discordMember) {
