@@ -3,7 +3,7 @@ const {
   REGISTRATION_ID,
   TICKETS_ID,
 } = require("../config/channels");
-const { OkHand, X } = require("../icons");
+const { OkHand, X } = require("../utils/icons");
 
 module.exports = {
   name: "messageCreate",

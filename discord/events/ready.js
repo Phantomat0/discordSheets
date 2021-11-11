@@ -10,7 +10,7 @@ const {
   MODERATOR_ROLE_ID,
   DONATOR_ROLE_ID,
 } = require("../config/roles");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 const {
   WavingHand,
   PageCurled,
@@ -369,13 +369,17 @@ module.exports = {
   once: true,
   async execute(client) {
     console.log("Ready!");
-    console.log(client);
 
+    console.log(client.application.commands.permissions);
+
+    let result = await client.guilds.cache.get(GUILD_ID).commands.fetch();
+    console.log(result);
     // startSixMan(client);
 
     while (true) {
       await muteChecker(client);
-      await sleep(6000);
+      // Check every five minutes
+      await sleep(300000);
     }
 
     // sendInformation(client);

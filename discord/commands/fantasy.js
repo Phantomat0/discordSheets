@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { FANTASY_MAIN } = require("../config/channels");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/fantasy-sub");
 
 module.exports = {

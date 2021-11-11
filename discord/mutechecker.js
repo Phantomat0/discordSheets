@@ -13,8 +13,10 @@ async function muteChecker(client) {
   muted.forEach(async (mutedUser) => {
     const timeOfMute = parseInt(mutedUser.time_of_mute);
 
+    const MS_IN_AN_HOUR = 3600000;
+
     // Get the duration in hours in ms
-    const msMuted = parseInt(mutedUser.duration) * 360000;
+    const msMuted = parseInt(mutedUser.duration) * MS_IN_AN_HOUR;
     const timeOfUnmute = timeOfMute + msMuted;
 
     const muteExpired = currrentTime > timeOfUnmute;

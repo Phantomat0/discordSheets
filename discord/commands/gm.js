@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MY_GM_ID } = require("../config/channels");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/gm-sub");
 
 module.exports = {

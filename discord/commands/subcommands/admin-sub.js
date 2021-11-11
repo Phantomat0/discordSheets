@@ -8,7 +8,6 @@ const { LOGO_URL } = require("../../config/logo");
 const { getTeamManagerIDs } = require("../../utils/database-utils");
 const {
   updateSignUpList,
-  getTeamManagerIDs,
   getDiscordMember,
   sendInteractionCompleted,
   sendInteractionTimedOut,

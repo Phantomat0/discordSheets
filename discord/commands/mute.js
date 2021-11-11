@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const { MOD_LOG_ID } = require("../config/channels");
-const { CommandError } = require("../utilts/errors");
+const { CommandError } = require("../utils/errors");
 const { plural, getDateTimeString } = require("../utils/utils");
 const { Silence } = require("../utils/icons");
 const { MUTED_ROLE_ID } = require("../config/roles");

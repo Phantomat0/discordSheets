@@ -3,7 +3,7 @@ const { MessageEmbed } = require("discord.js");
 const {
   REGISTERED_LIST_ID,
   REGISTERED_LIST_MESSAGE_ID,
-} = require("./config/channels");
+} = require("../config/channels");
 
 const sendInteractionCompleted = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle(

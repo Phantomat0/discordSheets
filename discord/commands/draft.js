@@ -1,9 +1,9 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { GreenCheck, RedTriangle, Warning } = require("../icons");
+const { GreenCheck } = require("../utils/icons");
 const mainDatabase = require("../../database/main/main");
 const { MY_GM_ID, TRANSACTIONS_ID } = require("../config/channels");
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 const { FREE_AGENT_ROLE_ID } = require("../config/roles");
 
 const TEAMS = [

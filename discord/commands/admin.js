@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { ADMIN_BOT_ID } = require("../config/channels");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/admin-sub");
 
 const D1TEAMS = [
@@ -17,8 +17,6 @@ const D2TEAMS = [
   ["Imperial", "8"],
 ];
 
-const TEAMS = [...D1TEAMS, ...D2TEAMS];
-
 module.exports = {
   allowedRoles: ["Admin"],
   allowedChannels: [ADMIN_BOT_ID], // Change this to admin channel later on
@@ -34,7 +32,7 @@ module.exports = {
         .setDescription("Sign a player")
         .addStringOption((option) => {
           option.setName("team").setRequired(true).setDescription("Team");
-          TEAMS.forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });
@@ -54,7 +52,7 @@ module.exports = {
         .setDescription("Release a player")
         .addStringOption((option) => {
           option.setName("team").setRequired(true).setDescription("Team");
-          TEAMS.forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });
@@ -70,7 +68,7 @@ module.exports = {
         )
         .addStringOption((option) => {
           option.setName("team").setRequired(true).setDescription("Team");
-          TEAMS.forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });
@@ -101,7 +99,7 @@ module.exports = {
             .setName("team")
             .setRequired(true)
             .setDescription("The player's team");
-          TEAMS.forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });
@@ -155,6 +153,6 @@ module.exports = {
     if (!command)
       throw new CommandError("Invalid Command", "That Command does not exist");
 
-    await command(interaction);
+    command(interaction);
   },
 };
