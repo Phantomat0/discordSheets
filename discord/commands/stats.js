@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../../database/main/main");
 const { GENERAL_ID } = require("../config/channels");
-const { CommandError } = require("../errors");
+const { CommandError } = require("../utils/errors");
 
 const makeStatsEmbed = (statsProfile, teams, divisionID) => {
   if (statsProfile === null) return null;

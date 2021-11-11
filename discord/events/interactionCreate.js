@@ -1,7 +1,31 @@
 const { MessageEmbed } = require("discord.js");
-const { Warning } = require("../icons");
-const { validateCommandRolesAndChannels } = require("../bot-util");
+const { Warning } = require("../utils/icons");
 const { BOT_ERROR_ID } = require("../config/channels");
+const { InvalidPermissionError } = require("../utils/errors");
+
+const validateCommandRolesAndChannels = (
+  interaction,
+  allowedRoles,
+  allowedChannels
+) => {
+  if (allowedRoles.length !== 0) {
+    const hasPerms = interaction.member.roles.cache.some((role) =>
+      allowedRoles.includes(role.name)
+    );
+
+    if (!hasPerms)
+      throw new InvalidPermissionError(
+        `You are not authorized to use that command!`
+      );
+  }
+
+  if (allowedChannels.length !== 0) {
+    if (!allowedChannels.includes(interaction.channelId))
+      throw new InvalidPermissionError(
+        `This command is not available in this channel`
+      );
+  }
+};
 
 const buttonInteractions = new Map([
   [

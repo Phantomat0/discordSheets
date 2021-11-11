@@ -1,14 +1,17 @@
 const {
   updateSignUpList,
-  getTeamManagerIDs,
-  getManagerAndTeamFromInteractionUser,
-  getTeamByDivisionOption,
   getDiscordMember,
   sendMessageIfValidUser,
   sendInteractionCompleted,
   sendInteractionTimedOut,
-  getDateTimeString,
-} = require("../../bot-util");
+} = require("../../utils/bot-utils");
+
+const { getDateTimeString } = require("../../utils/utils");
+const {
+  getTeamManagerIDs,
+  getManagerAndTeamFromInteractionUser,
+  getTeamByDivisionOption,
+} = require("../../utils/database-utils");
 
 const mainDatabase = require("../../../database/main/main");
 const { LOGO_URL } = require("../../config/logo");
@@ -16,13 +19,12 @@ const {
   MessageEmbed,
   MessageActionRow,
   MessageSelectMenu,
-  MessageButton,
 } = require("discord.js");
 const { FREE_AGENT_ROLE_ID } = require("../../config/roles");
 const { TRANSACTIONS_ID } = require("../../config/channels");
-const { CommandError, InvalidPermissionError } = require("../../errors");
-const { getCancelAndConfirmButtonRow } = require("../../buttons");
-const { successEmbedCreator } = require("../../embeds");
+const { CommandError, InvalidPermissionError } = require("../../utils/errors");
+const { getCancelAndConfirmButtonRow } = require("../../utils/buttons");
+const { successEmbedCreator } = require("../../utils/embeds");
 const updateTeamRosters = require("../../updaterosters");
 
 const getTeamPlayersBasedOnManagerStatus = async (

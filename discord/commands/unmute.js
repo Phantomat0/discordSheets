@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const { MOD_LOG_ID } = require("../config/channels");
-const { CommandError } = require("../errors");
-const { getDateTimeString } = require("../bot-util");
+const { CommandError } = require("../utils/errors");
+const { getDateTimeString } = require("../utils/utils");
 const { MUTED_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
 const mainDatabase = require("../../database/main/main");

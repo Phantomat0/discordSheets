@@ -1,13 +1,13 @@
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../../../database/main/main");
-const { successEmbedCreator } = require("../../embeds");
-const { CommandError } = require("../../errors");
+const { successEmbedCreator } = require("../../utils/embeds");
+const { CommandError } = require("../../utils/errors");
 const { FANTASY_TRANSACTIONS_ID } = require("../../config/channels");
-const { getCancelAndConfirmButtonRow } = require("../../buttons");
+const { getCancelAndConfirmButtonRow } = require("../../utils/buttons");
 const {
   sendInteractionCompleted,
   sendInteractionTimedOut,
-} = require("../../bot-util");
+} = require("../../utils/bot-utils");
 
 async function joinCmd(interaction) {
   throw new CommandError("Ineligible", "Registration has closed.");

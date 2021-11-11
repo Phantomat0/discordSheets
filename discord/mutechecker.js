@@ -1,5 +1,5 @@
 const mainDatabase = require("../database/main/main");
-const { getDiscordMember } = require("./bot-util");
+const { getDiscordMember } = require("./utils/bot-utils");
 const { MUTED_ROLE_ID } = require("./config/roles");
 const { GUILD_ID } = require("./config/config");
 const { MOD_LOG_ID } = require("./config/channels");

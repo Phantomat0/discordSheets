@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../../database/main/main");
-const { updateSignUpList } = require("../bot-util");
-const { successEmbedCreator } = require("../embeds");
+const { updateSignUpList } = require("../utils/bot-utils");
+const { successEmbedCreator } = require("../utils/embeds");
 const { FREE_AGENT_ROLE_ID } = require("../config/roles");
 const { REGISTERED_ID } = require("../config/channels");
 

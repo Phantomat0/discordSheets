@@ -5,19 +5,18 @@ const {
 } = require("discord.js");
 const mainDatabase = require("../../../database/main/main");
 const { LOGO_URL } = require("../../config/logo");
+const { getTeamManagerIDs } = require("../../utils/database-utils");
 const {
   updateSignUpList,
   getTeamManagerIDs,
-  getManagerAndTeamFromInteractionUser,
-  getTeamByDivisionOption,
   getDiscordMember,
   sendInteractionCompleted,
   sendInteractionTimedOut,
   sendMessageIfValidUser,
-} = require("../../bot-util");
+} = require("../../utils/bot-utils");
 const { getCancelAndConfirmButtonRow } = require("../../utils/buttons");
 const { successEmbedCreator } = require("../../utils/embeds");
-const { CommandError } = require("../../errors");
+const { CommandError } = require("../../utils/errors");
 const { TRANSACTIONS_ID, TRADES_ID } = require("../../config/channels");
 const { Balance } = require("../../utils/icons");
 const {

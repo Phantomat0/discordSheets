@@ -1,15 +1,9 @@
-const mainDatabase = require("../database/main/main");
-const { ThumbsUp } = require("./utils/icons");
+const { ThumbsUp } = require("./icons");
 const { MessageEmbed } = require("discord.js");
-const { InvalidPermissionError } = require("./errors");
 const {
   REGISTERED_LIST_ID,
   REGISTERED_LIST_MESSAGE_ID,
 } = require("./config/channels");
-
-const plural = (number, singular, plural) => {
-  return `${number} ${number === 1 ? singular : plural}`;
-};
 
 const sendInteractionCompleted = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle(
@@ -21,42 +15,6 @@ const sendInteractionCompleted = (interaction) => {
 const sendInteractionTimedOut = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle("Command Timed Out");
   interaction.editReply({ embeds: [completeEmbed], components: [] });
-};
-
-const getTeamByDivisionOption = async (divisionOption, teamProfile) => {
-  if (teamProfile.division_id == 2 && divisionOption === "division_1")
-    throw new InvalidPermissionError(
-      `You are not a manager of a division one team`
-    );
-
-  return divisionOption === "division_1" || teamProfile.division_id == 2
-    ? teamProfile
-    : await mainDatabase.getTeamsAffiliate(teamProfile.team_id);
-};
-
-const getManagerAndTeamFromInteractionUser = async (interactionUserID) => {
-  const managerProfile = await mainDatabase.getPlayerByDiscordID(
-    interactionUserID
-  );
-
-  if (managerProfile === null)
-    throw new InvalidPermissionError(
-      `You are not registered as a player in the database`
-    );
-
-  const managerTeamProfile = await mainDatabase.getManagersTeam(
-    managerProfile.player_id
-  );
-
-  if (managerTeamProfile === null)
-    throw new InvalidPermissionError(
-      `That team does not exist or you are not a manager of it`
-    );
-
-  return {
-    managerProfile,
-    managerTeamProfile,
-  };
 };
 
 function addDiscordRole(discordMember, roleID) {
@@ -75,18 +33,6 @@ function removeDiscordRole(discordMember, roleID) {
     console.log(error);
     return null;
   }
-}
-
-function getTeamManagerIDs(teamProfile) {
-  const { manager_player_ids } = teamProfile;
-  const managersArray = JSON.parse(manager_player_ids);
-
-  const [generalManagerID = null, ...assistantManagerIDs] = managersArray;
-
-  return {
-    generalManagerID,
-    assistantManagerIDs: assistantManagerIDs ?? [],
-  };
 }
 
 async function updateSignUpList(client) {
@@ -126,42 +72,6 @@ async function updateSignUpList(client) {
     .then((message) => message.edit({ embeds: [signedUpPlayersEmbed] }));
 }
 
-const validateCommandRolesAndChannels = (
-  interaction,
-  allowedRoles,
-  allowedChannels
-) => {
-  if (allowedRoles.length !== 0) {
-    const hasPerms = interaction.member.roles.cache.some((role) =>
-      allowedRoles.includes(role.name)
-    );
-
-    if (!hasPerms)
-      throw new InvalidPermissionError(
-        `You are not authorized to use that command!`
-      );
-  }
-
-  if (allowedChannels.length !== 0) {
-    if (!allowedChannels.includes(interaction.channelId))
-      throw new InvalidPermissionError(
-        `This command is not available in this channel`
-      );
-  }
-};
-
-const getDateTimeString = () => {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    timeZoneName: "short",
-    timeZone: "America/Chicago",
-  });
-};
-
 const getDiscordMember = async (interaction, discordID, guild) => {
   try {
     if (!interaction) return await guild.members.fetch(discordID);
@@ -189,16 +99,10 @@ const sendMessageIfValidUser = async (
 
 module.exports = {
   updateSignUpList,
-  validateCommandRolesAndChannels,
-  getTeamManagerIDs,
-  getManagerAndTeamFromInteractionUser,
   sendMessageIfValidUser,
-  getTeamByDivisionOption,
-  getDateTimeString,
   getDiscordMember,
   sendInteractionCompleted,
   sendInteractionTimedOut,
   addDiscordRole,
   removeDiscordRole,
-  plural,
 };
