@@ -1,9 +1,10 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageAttachment } = require("discord.js");
 const updateTeamRosters = require("../updaterosters");
+const { ADMIN_ROLE_ID } = require("../config/roles");
 
 module.exports = {
-  allowedRoles: ["Admin"],
+  allowedRoles: [ADMIN_ROLE_ID],
   allowedChannels: [],
   data: new SlashCommandBuilder()
     .setName("test")

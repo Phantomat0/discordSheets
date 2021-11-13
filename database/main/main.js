@@ -22,7 +22,7 @@ const SHEET_TABLES = {
   },
   FANTASY_TEAMS: {
     name: "fantasy-teams",
-    range: "fantasy-teams!A1:T",
+    range: "fantasy-teams!A1:X",
   },
   FANTASY_RANKINGS: {
     name: "fantasy-rankings",

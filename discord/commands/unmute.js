@@ -3,7 +3,7 @@ const { MessageEmbed } = require("discord.js");
 const { MOD_LOG_ID } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 const { getDateTimeString } = require("../utils/utils");
-const { MUTED_ROLE_ID } = require("../config/roles");
+const { MUTED_ROLE_ID, MODERATOR_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
 const mainDatabase = require("../../database/main/main");
 
@@ -39,7 +39,7 @@ async function validateMute(interaction, discordMember) {
 }
 
 module.exports = {
-  allowedRoles: ["Admin", "Moderator"],
+  allowedRoles: [MODERATOR_ROLE_ID],
   allowedChannels: [],
   data: new SlashCommandBuilder()
     .setName("unmute")

@@ -2,9 +2,10 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { FANTASY_MAIN } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/fantasy-sub");
+const { FANTASY_ROLE_ID } = require("../config/roles");
 
 module.exports = {
-  allowedRoles: [],
+  allowedRoles: [FANTASY_ROLE_ID],
   allowedChannels: [FANTASY_MAIN],
   data: new SlashCommandBuilder()
     .setName("fantasy")

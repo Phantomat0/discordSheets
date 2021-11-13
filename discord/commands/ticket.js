@@ -2,9 +2,10 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
 const { threadId } = require("worker_threads");
 const { TICKETS_ID } = require("../config/channels");
+const { ADMIN_ROLE_ID } = require("../config/roles");
 
 module.exports = {
-  allowedRoles: ["Admin"],
+  allowedRoles: [ADMIN_ROLE_ID],
   allowedChannels: [TICKETS_ID],
   data: new SlashCommandBuilder()
     .setName("ticket")

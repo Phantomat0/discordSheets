@@ -5,8 +5,8 @@ const { LOGO_URL } = require("../config/logo");
 const { GUILD_ID } = require("../config/config");
 const {
   ANNOUNCEMENT_ROLE_ID,
-  MEDIA_ROLE_ID,
   SCORES_ROLE_ID,
+  MEDIA_ROLE_ID,
   MODERATOR_ROLE_ID,
   DONATOR_ROLE_ID,
 } = require("../config/roles");
@@ -29,6 +29,7 @@ const {
 
 const updateTournyPlayers = require("../updatetourny");
 const muteChecker = require("../mutechecker");
+const deployCommandPermissions = require("../deploy-command-perms");
 async function startSixMan(client) {
   return;
   const signUpButton = new MessageActionRow().addComponents(
@@ -370,17 +371,15 @@ module.exports = {
   async execute(client) {
     console.log("Ready!");
 
-    console.log(client.application.commands.permissions);
+    deployCommandPermissions(client);
 
-    let result = await client.guilds.cache.get(GUILD_ID).commands.fetch();
-    console.log(result);
     // startSixMan(client);
 
-    while (true) {
-      await muteChecker(client);
-      // Check every five minutes
-      await sleep(300000);
-    }
+    // while (true) {
+    //   await muteChecker(client);
+    //   // Check every five minutes
+    //   await sleep(300000);
+    // }
 
     // sendInformation(client);
 

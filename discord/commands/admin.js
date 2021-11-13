@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { ADMIN_BOT_ID } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/admin-sub");
+const { ADMIN_ROLE_ID } = require("../config/roles");
 
 const D1TEAMS = [
   ["Hellfish", "1"],
@@ -18,7 +19,7 @@ const D2TEAMS = [
 ];
 
 module.exports = {
-  allowedRoles: ["Admin"],
+  allowedRoles: [ADMIN_ROLE_ID],
   allowedChannels: [ADMIN_BOT_ID], // Change this to admin channel later on
   data: new SlashCommandBuilder()
     .setName("admin")
