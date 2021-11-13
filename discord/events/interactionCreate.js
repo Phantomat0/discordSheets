@@ -3,28 +3,18 @@ const { Warning } = require("../utils/icons");
 const { BOT_ERROR_ID } = require("../config/channels");
 const { InvalidPermissionError } = require("../utils/errors");
 
-const validateCommandRolesAndChannels = (
-  interaction,
-  allowedRoles,
-  allowedChannels
-) => {
-  if (allowedRoles.length !== 0) {
-    const hasPerms = interaction.member.roles.cache.some((role) =>
-      allowedRoles.includes(role.name)
+const validateCommandChannels = (interaction, allowedChannels) => {
+  if (allowedChannels.length === 0) return true;
+
+  // Lets map all the available channels to a string and format it to help the user
+  const availableChannelsStr = allowedChannels
+    .map((channelID) => `<#${channelID}>`)
+    .join(", ");
+
+  if (!allowedChannels.includes(interaction.channelId))
+    throw new InvalidPermissionError(
+      `This command is not available in this channel, try using it in one of the following channels: ${availableChannelsStr}`
     );
-
-    if (!hasPerms)
-      throw new InvalidPermissionError(
-        `You are not authorized to use that command!`
-      );
-  }
-
-  if (allowedChannels.length !== 0) {
-    if (!allowedChannels.includes(interaction.channelId))
-      throw new InvalidPermissionError(
-        `This command is not available in this channel`
-      );
-  }
 };
 
 const buttonInteractions = new Map([
@@ -52,11 +42,7 @@ const handleCommand = async (interaction) => {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    validateCommandRolesAndChannels(
-      interaction,
-      command.allowedRoles,
-      command.allowedChannels
-    );
+    validateCommandChannels(interaction, command.allowedChannels);
     // Future can have different timeouts for each command
     await command.execute(interaction);
   } catch (error) {
