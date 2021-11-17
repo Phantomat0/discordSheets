@@ -1,6 +1,6 @@
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../database/main/main");
-const { getTeamManagerIDs } = require("./utils/bot-utils");
+const { getTeamManagerIDs } = require("./utils/database-utils");
 const {
   D1_ID,
   D2_ID,

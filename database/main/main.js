@@ -1,7 +1,7 @@
 const { MasterSheet } = require("../../sheets/sheet");
 const RegistrationManager = require("./registration");
-const DatabaseError = require("../../sheets/errors");
 const AsciiTable = require("ascii-table");
+const CacheManager = require("./cachemanager");
 
 const SHEET_TABLES = {
   PLAYERS: {
@@ -44,6 +44,14 @@ const SHEET_TABLES = {
     name: "statsd2",
     range: "statsd2!A1:L",
   },
+  D1_AWARDS: {
+    name: "awards_d1",
+    range: "awards_d1!A1:I",
+  },
+  D2_AWARDS: {
+    name: "awards_d2",
+    range: "awards_d2!A1:H",
+  },
   TEST: {
     name: "stuff",
     range: "stuff!A1:B",
@@ -63,9 +71,10 @@ const SHEET_TABLES = {
 };
 
 class MasterSheetManager {
-  constructor(sheetObj, sheets) {
+  constructor(sheetObj, sheets, cacheManager) {
     this._sheet = sheetObj;
     this._sheetTables = sheets;
+    this.cache = cacheManager;
   }
 
   async test() {
@@ -397,6 +406,25 @@ class MasterSheetManager {
     });
   }
 
+  async checkIfVoted(divison, playerID) {
+    const sheet =
+      divison === "division_1"
+        ? this._sheetTables.D1_AWARDS
+        : this._sheetTables.D2_AWARDS;
+
+    const awards = await this._sheet.listMany(sheet);
+
+    return awards.some((player) => player.player_id == playerID);
+  }
+
+  async processAwardVotes(divison, voteArray) {
+    const sheet =
+      divison === "division_1"
+        ? this._sheetTables.D1_AWARDS
+        : this._sheetTables.D2_AWARDS;
+    this._sheet.write(sheet, voteArray);
+  }
+
   async getTeams() {
     return await this._sheet.listMany(this._sheetTables.TEAMS);
   }
@@ -545,6 +573,10 @@ class MasterSheetManager {
   }
 }
 
-const mainDatabase = new MasterSheetManager(MasterSheet, SHEET_TABLES);
+const mainDatabase = new MasterSheetManager(
+  MasterSheet,
+  SHEET_TABLES,
+  CacheManager
+);
 
 module.exports = mainDatabase;

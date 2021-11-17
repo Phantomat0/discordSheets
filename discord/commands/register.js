@@ -4,7 +4,7 @@ const mainDatabase = require("../../database/main/main");
 const { updateSignUpList } = require("../utils/bot-utils");
 const { successEmbedCreator } = require("../utils/embeds");
 const { FREE_AGENT_ROLE_ID } = require("../config/roles");
-const { REGISTERED_ID } = require("../config/channels");
+const { REGISTERED_ID, REGISTRATION_ID } = require("../config/channels");
 
 const PLAYER_POSITIONS = [
   ["ST", "ST"],
@@ -16,7 +16,7 @@ const PLAYER_POSITIONS = [
 
 module.exports = {
   allowedRoles: [],
-  allowedChannels: [],
+  allowedChannels: [REGISTRATION_ID],
   data: new SlashCommandBuilder()
     .setName("register")
     .setDescription("Register for the league")

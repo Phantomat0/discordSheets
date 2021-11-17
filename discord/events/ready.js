@@ -1,6 +1,10 @@
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const mainDatabase = require("../../database/main/main");
-const { INFORMATION_ID, REGISTRATION_ID } = require("../config/channels");
+const {
+  INFORMATION_ID,
+  REGISTRATION_ID,
+  AWARD_VOTING_ID,
+} = require("../config/channels");
 const { LOGO_URL } = require("../config/logo");
 const { GUILD_ID } = require("../config/config");
 const {
@@ -371,15 +375,25 @@ module.exports = {
   async execute(client) {
     console.log("Ready!");
 
-    deployCommandPermissions(client);
+    // deployCommandPermissions(client);
+
+    // const awardsEmbed = new MessageEmbed()
+    //   .setTitle("Season 1 Award Voting")
+    //   .setDescription(
+    //     "Vote for awards in this channel using the **/awards** command. Some rules: \nYou must have been registered for the current season in order to be eligible to vote.\nOnly one vote per division\nYou must place a vote for each award\nPrimary and Secondary options for Best Player cannot be the same\n**Award Voting closes November 17th 11:59PM EST**"
+    //   );
+
+    // await client.channels.cache.get(AWARD_VOTING_ID).send({
+    //   embeds: [awardsEmbed],
+    // });
 
     // startSixMan(client);
 
-    // while (true) {
-    //   await muteChecker(client);
-    //   // Check every five minutes
-    //   await sleep(300000);
-    // }
+    while (true) {
+      await muteChecker(client);
+      // Check every five minutes
+      await sleep(300000);
+    }
 
     // sendInformation(client);
 

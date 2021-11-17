@@ -1,16 +1,20 @@
 const { MessageEmbed } = require("discord.js");
 const mainDatabase = require("../database/main/main");
+const { cache: CacheManager } = mainDatabase;
 
 const getTournyPlayersEmbed = async () => {
-  const players = await mainDatabase.getPlayers();
+  const PlayerManager = await new CacheManager(mainDatabase).loadCache(
+    "players",
+    mainDatabase.getPlayers
+  );
+
   const tournyPlayers = await mainDatabase.getTournyPlayers();
 
   const playersString = tournyPlayers
     .map((player, index) => {
-      const playerDiscordID = players.find(
-        (playerProfile) => playerProfile.player_id == player.player_id
+      const playerDiscordID = PlayerManager.getPlayer(
+        player.player_id
       ).discord_id;
-
       return `${index + 1}. ${player.player_name} <@${playerDiscordID}>`;
     })
     .join("\n");

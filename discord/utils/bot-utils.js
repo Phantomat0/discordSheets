@@ -4,6 +4,7 @@ const {
   REGISTERED_LIST_ID,
   REGISTERED_LIST_MESSAGE_ID,
 } = require("../config/channels");
+const mainDatabase = require("../../database/main/main");
 
 const sendInteractionCompleted = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle(

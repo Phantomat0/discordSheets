@@ -71,11 +71,9 @@ module.exports = {
       .setColor("GREEN")
       .setTitle(`Unmute`)
       .setDescription(
-        `${
-          mutedObj ? `[MuteLog](${mutedObj.message_link})\n` : ""
-        }**User:** <@${discordMember.user.id}>\n**By:** <@${
-          interaction.user.id
-        }>\n\n*${timeStamp}*`
+        `${mutedObj ? `[Log](${mutedObj.message_link})\n` : ""}**User:** <@${
+          discordMember.user.id
+        }>\n**By:** <@${interaction.user.id}>\n\n*${timeStamp}*`
       );
 
     await interaction.editReply({

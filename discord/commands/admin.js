@@ -20,7 +20,7 @@ const D2TEAMS = [
 
 module.exports = {
   allowedRoles: [ADMIN_ROLE_ID],
-  allowedChannels: [ADMIN_BOT_ID], // Change this to admin channel later on
+  allowedChannels: [ADMIN_BOT_ID],
   data: new SlashCommandBuilder()
     .setName("admin")
     .setDescription("Admin Manager")
