@@ -5,7 +5,10 @@ const {
 } = require("discord.js");
 const mainDatabase = require("../../../database/main/main");
 const { LOGO_URL } = require("../../config/logo");
-const { getTeamManagerIDs } = require("../../utils/database-utils");
+const {
+  getTeamManagerIDs,
+  validateRosterSize,
+} = require("../../utils/database-utils");
 const {
   updateSignUpList,
   getDiscordMember,
@@ -21,13 +24,11 @@ const { Balance } = require("../../utils/icons");
 const {
   GENERAL_MANAGER_ROLE_ID,
   ASSISTANT_MANAGER_ROLE_ID,
+  FREE_AGENT_ROLE_ID,
 } = require("../../config/roles");
 const updateTeamRosters = require("../../updaterosters");
 const updateFantasy = require("../../updatefantasy");
-
-async function signCmd(interaction) {}
-
-async function releaseCmd(interaction) {}
+const CacheManager = require("../../../database/main/cachemanager");
 
 async function appointManagerCmd(interaction) {
   const { options } = interaction;
@@ -244,24 +245,139 @@ async function appointManagerCmd(interaction) {
   });
 }
 
-async function waiverSignCmd(interaction) {}
+async function waiverSignCmd(interaction) {
+  const teamOption = interaction.options.getString("team");
+  const playerNameOption = interaction.options.getString("player_name");
 
-async function getTeamAndAffiliatePlayersNoGM(teamProfile) {
-  const d1Players = await mainDatabase.getPlayersByTeam(teamProfile.team_id);
-  const d2Team = await mainDatabase.getTeamsAffiliate(teamProfile.team_id);
-  const d2Players = await mainDatabase.getPlayersByTeam(d2Team.team_id);
+  const teamProfile = await mainDatabase.getTeam(teamOption);
 
-  const { generalManagerID, assistantManagerIDs } =
-    getTeamManagerIDs(teamProfile);
+  const selectedPlayerProfile = await mainDatabase.getPlayerByName(
+    playerNameOption
+  );
 
-  const d1PlayersNoGM = d1Players.filter(
+  if (selectedPlayerProfile === null)
+    throw new CommandError(
+      "Player does not exist",
+      `Player **${playerNameOption}** does not exist`
+    );
+
+  const {
+    player_id: playerID,
+    player_name: playerName,
+    discord_id: discordID,
+  } = selectedPlayerProfile;
+
+  await validateRosterSize(teamProfile);
+
+  const discordMember = await getDiscordMember(interaction, discordID);
+
+  const buttons = getCancelAndConfirmButtonRow("waiverSignConfirm");
+
+  const confirmEmbed = new MessageEmbed()
+    .setColor(teamProfile.color)
+    .setTitle(`Confirm waiver signing`)
+    .setDescription(`Are you sure you want to sign **${playerName}** to **${teamProfile.name}**?\nDiscord: <@${discordID}>
+    `);
+
+  interaction.editReply({
+    embeds: [confirmEmbed],
+    components: [buttons],
+    ephemeral: true,
+  });
+
+  const collector = interaction.channel.createMessageComponentCollector({
+    filter: (i) =>
+      i.user.id === interaction.user.id && i.customId === "waiverSignConfirm",
+    componentType: "BUTTON",
+    time: 15000,
+    max: 1,
+  });
+
+  collector.on("collect", async (i) => {
+    if (discordMember) {
+      discordMember.roles.remove(FREE_AGENT_ROLE_ID);
+      // discordMember.roles.add(teamProfile.role_id);
+    }
+
+    // Change his team in the database
+    mainDatabase.updatePlayerTeam(playerID, teamProfile.team_id);
+
+    const successEmbed = successEmbedCreator(
+      "Successful waiver signing!",
+      `**${playerName}** has been signed to the **${teamProfile.name}** through waivers!`
+    );
+
+    const signEmbed = new MessageEmbed()
+      .setColor(teamProfile.color)
+      .setAuthor(
+        `${teamProfile.name} sign ${playerName} off of Waivers`,
+        teamProfile.logo_url
+      )
+      .setDescription(`<@${discordID}>`)
+      .setTimestamp()
+      .setFooter(
+        `${interaction.user.username}`,
+        interaction.user.displayAvatarURL()
+      );
+
+    const signDMEmbed = new MessageEmbed()
+      .setColor(teamProfile.color)
+      .setAuthor(`American Futsal League`, LOGO_URL)
+      .setTitle(`You have been signed!`)
+      .setDescription(`${teamProfile.name} have signed you off of waivers!`);
+
+    if (teamProfile.discord_invite) {
+      signDMEmbed.addField(
+        `Welcome to the team!`,
+        `[Join Discord](${teamProfile.discord_invite})'${teamProfile.name} Discord'`
+      );
+    }
+
+    await sendMessageIfValidUser(interaction, discordID, {
+      embeds: [signDMEmbed],
+    });
+
+    await interaction.client.channels.cache.get(TRANSACTIONS_ID).send({
+      embeds: [signEmbed],
+    });
+
+    await i.reply({
+      embeds: [successEmbed],
+      ephemeral: true,
+    });
+
+    sendInteractionCompleted(interaction);
+
+    updateSignUpList(interaction.client);
+    updateTeamRosters(interaction.client);
+  });
+
+  collector.on("end", (collected) => {
+    if (collected.size >= 1) return;
+    sendInteractionTimedOut(interaction);
+  });
+}
+
+async function getOrganizationPlayersNoGM(teamProfile) {
+  const PlayersManagers = await new CacheManager(mainDatabase).loadCache(
+    "players",
+    mainDatabase.getPlayers
+  );
+
+  const affiliateTeamIDs = JSON.parse(teamProfile.affiliate_team_ids);
+
+  // Get the players from the D1 team and then all of the affiliates
+  const organizationPlayers = [teamProfile.team_id, ...affiliateTeamIDs]
+    .map((teamID) => PlayersManagers.getPlayersByTeam(teamID))
+    .flat();
+
+  const { generalManagerID } = getTeamManagerIDs(teamProfile);
+
+  const organizationPlayersNoGM = organizationPlayers.filter(
     (player) => player.player_id != generalManagerID
   );
 
-  return {
-    d1Players: d1PlayersNoGM,
-    d2Players: d2Players,
-  };
+  return organizationPlayersNoGM;
 }
 
 async function tradeCmd(interaction) {
@@ -275,9 +391,7 @@ async function tradeCmd(interaction) {
     throw new CommandError("Invalid Teams", "Duplicate Teams Selected");
 
   const team1Profile = await mainDatabase.getTeam(team1ID);
-  const { d1Players, d2Players } = await getTeamAndAffiliatePlayersNoGM(
-    team1Profile
-  );
+  const organizationPlayers = await getOrganizationPlayersNoGM(team1Profile);
 
   const messageSelect = new MessageSelectMenu()
     .setCustomId("team1PlayerTrade")
@@ -285,12 +399,14 @@ async function tradeCmd(interaction) {
     .setMinValues(1);
 
   // Now lets map that to the messageSelect options format, make sure to filter out the GM, as the GM cant release himself
-  const playerOptionsArray = [...d1Players, ...d2Players].map((player) => {
+  const playerOptionsArray = organizationPlayers.map((player) => {
     return {
       label: player.player_name,
       value: player.player_id,
     };
   });
+
+  console.log(playerOptionsArray);
 
   messageSelect.addOptions(playerOptionsArray);
 
@@ -330,18 +446,17 @@ async function tradeCmd(interaction) {
       .setPlaceholder("No players selected")
       .setMinValues(1);
 
-    const { d1Players: d1PlayersTeam2, d2Players: d2PlayersTeam2 } =
-      await getTeamAndAffiliatePlayersNoGM(team2Profile);
+    const organizationPlayersTeam2 = await getOrganizationPlayersNoGM(
+      team2Profile
+    );
 
     // Now lets map that to the messageSelect options format, make sure to filter out the GM, as the GM cant release himself
-    const playerOptionsArray2 = [...d1PlayersTeam2, ...d2PlayersTeam2].map(
-      (player) => {
-        return {
-          label: player.player_name,
-          value: player.player_id,
-        };
-      }
-    );
+    const playerOptionsArray2 = organizationPlayersTeam2.map((player) => {
+      return {
+        label: player.player_name,
+        value: player.player_id,
+      };
+    });
 
     messageSelect2.addOptions(playerOptionsArray2);
 
@@ -573,8 +688,6 @@ function updateEmbedsCmd(interaction) {
 }
 
 module.exports = new Map([
-  ["sign", signCmd],
-  ["release", releaseCmd],
   ["appoint", appointManagerCmd],
   ["waiversign", waiverSignCmd],
   ["trade", tradeCmd],

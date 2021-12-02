@@ -1,10 +1,8 @@
 const { ThumbsUp } = require("./icons");
 const { MessageEmbed } = require("discord.js");
-const {
-  REGISTERED_LIST_ID,
-  REGISTERED_LIST_MESSAGE_ID,
-} = require("../config/channels");
+const { SIGNUP_ID, SIGNUP_LIST_MESSAGE_ID } = require("../config/channels");
 const mainDatabase = require("../../database/main/main");
+const CacheManager = require("../../database/main/cachemanager");
 
 const sendInteractionCompleted = (interaction) => {
   const completeEmbed = new MessageEmbed().setTitle(
@@ -40,14 +38,17 @@ async function updateSignUpList(client) {
   const { freeAgentPlayers, waiverPlayers } =
     await mainDatabase.getFreeAgentsAndWaivers();
 
-  const players = await mainDatabase.getPlayers();
+  console.log(freeAgentPlayers, waiverPlayers);
+
+  const PlayersManager = await new CacheManager(mainDatabase).loadCache(
+    "players",
+    mainDatabase.getPlayers
+  );
 
   const mapToSignUpList = (playerArray) => {
     return playerArray.map((signUpObj) => {
       const { player_id, player_display_name } = signUpObj;
-      const { discord_id } = players.find(
-        (player) => player.player_id === player_id
-      );
+      const { discord_id } = PlayersManager.getPlayer(player_id);
       return `${player_display_name} <@${discord_id}>`;
     });
   };
@@ -60,16 +61,18 @@ async function updateSignUpList(client) {
     .setTitle("Draft Signups")
     .setColor("#FF0055")
     .setDescription(
-      `**Pending Waivers: ${
-        waiverPlayersMapped.length
-      }**\n${waiverPlayersMapped.join("\n")}\n\n**Free Agents: ${
+      `**Draftees: ${waiverPlayersMapped.length}**\n${waiverPlayersMapped.join(
+        "\n"
+      )}\n\n**Free Agents: ${
         freeAgentPlayersMapped.length
       }**\n${freeAgentPlayersMapped.join("\n")}`
     );
 
+  console.log(signedUpPlayersEmbed);
+
   await client.channels.cache
-    .get(REGISTERED_LIST_ID)
-    .messages.fetch(REGISTERED_LIST_MESSAGE_ID)
+    .get(SIGNUP_ID)
+    .messages.fetch(SIGNUP_LIST_MESSAGE_ID)
     .then((message) => message.edit({ embeds: [signedUpPlayersEmbed] }));
 }
 

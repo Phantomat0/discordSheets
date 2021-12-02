@@ -4,6 +4,7 @@ const {
   INFORMATION_ID,
   REGISTRATION_ID,
   AWARD_VOTING_ID,
+  SIGNUP_ID,
 } = require("../config/channels");
 const { LOGO_URL } = require("../config/logo");
 const { GUILD_ID } = require("../config/config");
@@ -201,7 +202,7 @@ async function sendInformation(client) {
     .setTitle(`${WavingHand}  Welcome to American Futsal!`)
     .setColor("#FF0055")
     .setDescription(
-      "North America's most profound futsal league!\n\nWe are a competitive 4v4 haxball league with two divisions and biweekly games. Additionally, we offer a 4v4 competitive ELO public room, a casual 3v3 room, and a 1v1 room."
+      `North America's most profound futsal league!\n\nWe are a competitive 4v4 haxball league with three divisions and biweekly games.\n A little more about us:\n\n ${SmallWhiteSquare} Draft style league, managers choose players to sign\n${SmallWhiteSquare} Three divisions with affiliation\n${SmallWhiteSquare} Champion declared at the end of every season for each division\n${SmallWhiteSquare} Weekly games, no reschedules unless mutually agreed upon\n${SmallWhiteSquare} Haxball's best antifake, Haxball and Discord authentication\n${SmallWhiteSquare} Seasonal fun tournaments in other modes`
     );
 
   const rulesArray = [
@@ -228,7 +229,7 @@ async function sendInformation(client) {
     .roles.cache.get(MODERATOR_ROLE_ID)
     .members.map((m) => m.user.id);
 
-  const adminsArray = [
+  const staffArray = [
     {
       name: "TDA",
       discordID: "296070049062584321",
@@ -241,27 +242,33 @@ async function sendInformation(client) {
       name: "salah",
       discordID: "391356195870605315",
     },
+    {
+      name: "Brian",
+      discordID: "658533411442524200",
+    },
   ];
 
   const moderatorListStr = moderatorsIdArray.map((id) => `<@${id}>`).join("\n");
-  const adminListStr = adminsArray
+  const adminListStr = staffArray
     .map((admin) => `${admin.name} <@${admin.discordID}>`)
     .join("\n");
   const staffEmbed = new MessageEmbed()
     .setTitle(`${Abascus}  Staff`)
-    .setColor("#3f9630")
+    .setColor("#3F9630")
     .setDescription(
-      `Want a clarification on rules? Want to report in game rule breaking? Contact an Admin.\n\nWant to report misconduct in the Discord, feel uncomortable or threatned, or just need any Discord help? Contact the moderator team and let them know.\n\n**Admins**\n${adminListStr}\n\n**Moderators**\n${moderatorListStr}`
+      `Want a clarification on rules? Want to report in game rule breaking? Contact an Admin.\n\nWant to report misconduct in the Discord, feel uncomortable or threatned, or just need any Discord help? Contact the moderator team and let them know.\n\n**Staff**\n${adminListStr}\n\n**Moderators**\n${moderatorListStr}`
     );
 
   const rulesEmbed = new MessageEmbed()
     .setTitle(`${PageCurled} Rules`)
-    .setColor("#d9dbda")
-    .setDescription(rulesStr);
+    .setColor("#D9DBDA")
+    .setDescription(
+      `${rulesStr}\n\nWe take the listed rules very seriously. We are committed in ensuring a welcoming and non-toxic environment for our members. A mute will be your first warning for an offense, subsequent offenses will be handled accordingly with further mutes and suspensions. `
+    );
 
   const faqEmbed = new MessageEmbed()
     .setTitle(`${QuestionMark} FAQ`)
-    .setColor("#f52727")
+    .setColor("#F52727")
     .addField(
       "How do I join a team?",
       `To join a team, you must first register for the league. Begin by going to <#${REGISTRATION_ID}> and using the /register command and filling out the form. From there, you wait to be picked up by a team.`,
@@ -269,12 +276,12 @@ async function sendInformation(client) {
     )
     .addField(
       "What if I am an inexperienced or new player?",
-      "Thankfully, the league is split into two divisions, D1 for more experienced players and D2 for intermediate/new players who are looking to prove themselves.",
+      "Thankfully, the league is split into three divisions, Division 1 for more experienced players and Division 2 for intermediate players and Division 3 for new players who are looking to prove themselves.",
       false
     )
     .addField(
       "When are games played?",
-      `**D1** Tuesdays and Thursdays 7PM EST \n **D2** Tuesdays and Thursdays 6PM EST`,
+      `**Division 2** Tuesdays and Thursdays 7PM EST \n **Division 2** Tuesdays and Thursdays 6PM EST \n **Division 3** Mondays and Fridays 6PM EST`,
       false
     )
     .addField(
@@ -284,7 +291,7 @@ async function sendInformation(client) {
     )
     .addField(
       "Who do I contact regarding an issue with the public rooms?",
-      `All public rooms are overseen by the <@&894715039687274516>`,
+      `All public rooms are overseen by pub admins. You can post a claim in the appropriate channel below to get a response back from one of them.\nIssues/Reports: <#896792007723339817>\nBan Appeals: <#895420435586482206>`,
       false
     )
     .addField(
@@ -294,7 +301,7 @@ async function sendInformation(client) {
     )
     .addField(
       "Who do I contact regarding an issue with the Discord?",
-      `Any issues or concerns regarding the Discord should be forwared to any of the moderators listed above in the rules section. `,
+      `Any issues or concerns regarding the Discord should be forwared to any of the moderators listed below in the staff section. `,
       false
     )
     .addField(
@@ -377,23 +384,41 @@ module.exports = {
 
     // deployCommandPermissions(client);
 
+    // const dumbEmbed = new MessageEmbed()
+    //   .setTitle("Registration")
+    //   .setDescription("Test");
+
+    const awardsEmbed = new MessageEmbed()
+      .setTitle("Registration")
+      .setDescription(
+        "Use the **/register** command to begin the registration process. Fill out your name, position, availability, and info."
+      );
+
+    // await client.channels.cache.get(SIGNUP_ID).send({
+    //   embeds: [dumbEmbed],
+    // });
+
+    // await client.channels.cache.get(SIGNUP_ID).send({
+    //   embeds: [awardsEmbed],
+    // });
+
     // const awardsEmbed = new MessageEmbed()
-    //   .setTitle("Season 1 Award Voting")
+    //   .setTitle("Season 1 Playoffs Best Player")
     //   .setDescription(
-    //     "Vote for awards in this channel using the **/awards** command. Some rules: \nYou must have been registered for the current season in order to be eligible to vote.\nOnly one vote per division\nYou must place a vote for each award\nPrimary and Secondary options for Best Player cannot be the same\n**Award Voting closes November 17th 11:59PM EST**"
+    //     "Vote for awards in this channel using the **/awards** command. Some rules: \nYou must have been registered for the current season in order to be eligible to vote.\nOnly one vote per division\nYou must place a vote for each award\nPrimary and Secondary options for Best Player cannot be the same\n**Award Voting closes November 23rd 10:59PM EST**"
     //   );
 
-    // await client.channels.cache.get(AWARD_VOTING_ID).send({
+    // await client.channels.cache.get("915730689104703528").send({
     //   embeds: [awardsEmbed],
     // });
 
     // startSixMan(client);
 
-    while (true) {
-      await muteChecker(client);
-      // Check every five minutes
-      await sleep(300000);
-    }
+    // while (true) {
+    //   await muteChecker(client);
+    //   // Check every five minutes
+    //   await sleep(300000);
+    // }
 
     // sendInformation(client);
 

@@ -18,6 +18,8 @@ const D2TEAMS = [
   ["Imperial", "8"],
 ];
 
+const D3TEAMS = [["Raiders", "9"]];
+
 module.exports = {
   allowedRoles: [ADMIN_ROLE_ID],
   allowedChannels: [ADMIN_BOT_ID],
@@ -29,47 +31,13 @@ module.exports = {
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("sign")
-        .setDescription("Sign a player")
-        .addStringOption((option) => {
-          option.setName("team").setRequired(true).setDescription("Team");
-          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
-            const [name, id] = team;
-            option.addChoice(name, id);
-          });
-
-          return option;
-        })
-        .addStringOption((option) =>
-          option
-            .setName("player_name")
-            .setDescription("The player's name")
-            .setRequired(true)
-        )
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName("release")
-        .setDescription("Release a player")
-        .addStringOption((option) => {
-          option.setName("team").setRequired(true).setDescription("Team");
-          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
-            const [name, id] = team;
-            option.addChoice(name, id);
-          });
-
-          return option;
-        })
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
         .setName("appoint")
         .setDescription(
           "Appoint a player as a General Manager or Assistant of a Team"
         )
         .addStringOption((option) => {
           option.setName("team").setRequired(true).setDescription("Team");
-          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS, ...D3TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });
@@ -100,7 +68,7 @@ module.exports = {
             .setName("team")
             .setRequired(true)
             .setDescription("The player's team");
-          [...D1TEAMS, ...D2TEAMS].forEach((team) => {
+          [...D1TEAMS, ...D2TEAMS, ...D3TEAMS].forEach((team) => {
             const [name, id] = team;
             option.addChoice(name, id);
           });

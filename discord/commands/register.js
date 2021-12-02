@@ -4,7 +4,7 @@ const mainDatabase = require("../../database/main/main");
 const { updateSignUpList } = require("../utils/bot-utils");
 const { successEmbedCreator } = require("../utils/embeds");
 const { FREE_AGENT_ROLE_ID } = require("../config/roles");
-const { REGISTERED_ID, REGISTRATION_ID } = require("../config/channels");
+const { SIGNUP_ID, RECENT_SIGNUPS_ID } = require("../config/channels");
 
 const PLAYER_POSITIONS = [
   ["ST", "ST"],
@@ -16,7 +16,7 @@ const PLAYER_POSITIONS = [
 
 module.exports = {
   allowedRoles: [],
-  allowedChannels: [REGISTRATION_ID],
+  allowedChannels: [SIGNUP_ID],
   data: new SlashCommandBuilder()
     .setName("register")
     .setDescription("Register for the league")
@@ -80,7 +80,7 @@ module.exports = {
     }
     await updateSignUpList(interaction.client);
 
-    await interaction.client.channels.cache.get(REGISTERED_ID).send({
+    await interaction.client.channels.cache.get(RECENT_SIGNUPS_ID).send({
       embeds: [signUpEmbed],
     });
 

@@ -38,11 +38,15 @@ const SHEET_TABLES = {
   },
   D1_STATS: {
     name: "statsd1",
-    range: "statsd1!A1:L",
+    range: "statsd1!A1:P",
   },
   D2_STATS: {
     name: "statsd2",
-    range: "statsd2!A1:L",
+    range: "statsd2!A1:P",
+  },
+  D3_STATS: {
+    name: "statsd3",
+    range: "statsd3!A1:P",
   },
   D1_AWARDS: {
     name: "awards_d1",
@@ -67,6 +71,10 @@ const SHEET_TABLES = {
   MUTED: {
     name: "muted",
     range: "muted!A1:I",
+  },
+  DRAFT: {
+    name: "draft",
+    range: "draft!A1:E97",
   },
 };
 
@@ -174,9 +182,20 @@ class MasterSheetManager {
       false
     );
 
+    const statsProfileD3 = await this._sheet.findOne(
+      this._sheetTables.D3_STATS,
+      {
+        player_name: {
+          value: playerProfile.player_name,
+        },
+      },
+      false
+    );
+
     return {
       statsProfileD1,
       statsProfileD2,
+      statsProfileD3,
     };
   }
 
@@ -265,6 +284,39 @@ class MasterSheetManager {
     return this._sheet.listMany(this._sheetTables.TOURNAMENT);
   }
 
+  async draftPlayer(playerProfile) {
+    const draftBoard = await this._sheet.listMany(this._sheetTables.DRAFT);
+
+    // Find the first object that doesnt have a "draftee" value, that means there hasn't been a selection yet
+    const currentPickRow = draftBoard.find(
+      (pick) => pick.hasOwnProperty("draftee") === false
+    );
+
+    this._sheet.findOneAndUpdate(
+      this._sheetTables.DRAFT,
+      [playerProfile.player_name],
+      {
+        overall: {
+          value: currentPickRow.overall,
+        },
+      },
+      { header: `draftee` }
+    );
+
+    const teamDrafting = await this.getTeamByName(currentPickRow.team_drafting);
+
+    // Also set that player to the team
+
+    this.updatePlayerTeam(playerProfile.player_id, teamDrafting.team_id);
+
+    return {
+      teamDrafting,
+      teamPick: currentPickRow.team_pick,
+      round: currentPickRow.round,
+      overall: currentPickRow.overall,
+    };
+  }
+
   async checkIfSignedUpTournament(playerID) {
     const signUp = await this._sheet.findOne(
       this._sheetTables.TOURNAMENT,
@@ -315,6 +367,7 @@ class MasterSheetManager {
     const signedUps = await this._sheet.listMany(
       this._sheetTables.PLAYERS_SIGNUP
     );
+
     const players = await this.getPlayers();
 
     // Filter out all players who have a team
@@ -406,6 +459,14 @@ class MasterSheetManager {
     });
   }
 
+  async getTeamByName(teamName) {
+    return await this._sheet.findOne(this._sheetTables.TEAMS, {
+      name: {
+        value: teamName,
+      },
+    });
+  }
+
   async checkIfVoted(divison, playerID) {
     const sheet =
       divison === "division_1"
@@ -457,18 +518,18 @@ class MasterSheetManager {
     );
   }
 
-  async getTeamsAffiliate(teamID) {
-    const teamProfile = await this._sheet.findOne(this._sheetTables.TEAMS, {
-      team_id: {
-        value: teamID,
-      },
-    });
+  async getTeamsAffiliates(teamProfile) {
+    const affiliateTeamIDs = JSON.parse(teamProfile.affiliate_team_ids);
 
-    return await this._sheet.findOne(this._sheetTables.TEAMS, {
-      team_id: {
-        value: teamProfile.affiliate_team_id,
-      },
-    });
+    return Promise.all(
+      affiliateTeamIDs.map(async (teamID) => {
+        return await this._sheet.findOne(this._sheetTables.TEAMS, {
+          team_id: {
+            value: teamID,
+          },
+        });
+      })
+    );
   }
 
   async getPlayersByTeam(teamID) {
