@@ -21,8 +21,9 @@ module.exports = {
           option
             .setName("division")
             .setDescription("Division")
-            .addChoice("Division 1", "division_1")
-            .addChoice("Division 2", "division_2")
+            .addChoice("Division 1", "1")
+            .addChoice("Division 2", "2")
+            .addChoice("Division 3", "3")
             .setRequired(true)
         )
         .addStringOption((option) =>
@@ -40,8 +41,9 @@ module.exports = {
           option
             .setName("division")
             .setDescription("Division")
-            .addChoice("Division 1", "division_1")
-            .addChoice("Division 2", "division_2")
+            .addChoice("Division 1", "1")
+            .addChoice("Division 2", "2")
+            .addChoice("Division 3", "3")
             .setRequired(true)
         )
     )
@@ -53,8 +55,9 @@ module.exports = {
           option
             .setName("division")
             .setDescription("Division")
-            .addChoice("Division 1", "division_1")
-            .addChoice("Division 2", "division_2")
+            .addChoice("Division 1", "1")
+            .addChoice("Division 2", "2")
+            .addChoice("Division 3", "3")
             .setRequired(true)
         )
         .addStringOption((option) =>

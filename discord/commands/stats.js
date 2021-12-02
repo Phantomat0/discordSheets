@@ -1,10 +1,11 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MessageEmbed } = require("discord.js");
+const CacheManager = require("../../database/main/cachemanager");
 const mainDatabase = require("../../database/main/main");
 const { GENERAL_ID } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 
-const makeStatsEmbed = (statsProfile, teams, divisionID) => {
+const makeStatsEmbed = (statsProfile, TeamManager, divisionID) => {
   if (statsProfile === null) return null;
   const {
     player_name,
@@ -13,18 +14,16 @@ const makeStatsEmbed = (statsProfile, teams, divisionID) => {
     time_played,
     goals,
     assists,
-    own_goals,
+    goals_difference,
+    gaa,
     cleansheets,
     wins,
     losses,
     fantasy_points,
+    time_played_gk,
   } = statsProfile;
 
-  const team = teams
-    .filter((team) => team.division_id === divisionID)
-    .find(
-      (team) => team.team_id == team_id || team.affiliate_team_id == team_id
-    );
+  const team = TeamManager.getTeamsDivisionAffiliate(team_id, divisionID);
 
   const convertDurationToStr = (timeString) => {
     const arr = timeString.split(":"); // splitting the string by colon
@@ -53,24 +52,28 @@ const makeStatsEmbed = (statsProfile, teams, divisionID) => {
     .addFields(
       { name: "Goals", value: goals, inline: true },
       { name: "Assists", value: assists, inline: true },
-      { name: "Own Goals", value: own_goals, inline: true },
+      { name: "+/-", value: goals_difference, inline: true },
       { name: "Cleansheets", value: cleansheets, inline: true },
+      { name: "GAA", value: gaa, inline: true },
       { name: "W-L", value: `${wins}-${losses}`, inline: true },
       { name: "Fantasy Points", value: fantasy_points, inline: true }
     );
 };
 
 const getPlayerStatsEmbed = async (playerProfile) => {
-  const teams = await mainDatabase.getTeams();
-
-  const { statsProfileD1, statsProfileD2 } = await mainDatabase.getPlayerStats(
-    playerProfile
+  const TeamManager = await new CacheManager(mainDatabase).loadCache(
+    "teams",
+    mainDatabase.getTeams
   );
 
-  const d1StatsEmbed = makeStatsEmbed(statsProfileD1, teams, "1");
-  const d2StatsEmbed = makeStatsEmbed(statsProfileD2, teams, "2");
+  const { statsProfileD1, statsProfileD2, statsProfileD3 } =
+    await mainDatabase.getPlayerStats(playerProfile);
 
-  return [d1StatsEmbed, d2StatsEmbed].filter((x) => !!x);
+  const d1StatsEmbed = makeStatsEmbed(statsProfileD1, TeamManager, "1");
+  const d2StatsEmbed = makeStatsEmbed(statsProfileD2, TeamManager, "2");
+  const d3StatsEmbed = makeStatsEmbed(statsProfileD3, TeamManager, "3");
+
+  return [d1StatsEmbed, d2StatsEmbed, d3StatsEmbed].filter((x) => !!x);
 };
 
 module.exports = {

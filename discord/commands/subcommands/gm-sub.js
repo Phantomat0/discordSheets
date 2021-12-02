@@ -11,6 +11,9 @@ const {
   getTeamManagerIDs,
   getManagerAndTeamFromInteractionUser,
   getTeamByDivisionOption,
+  hasManagerPermsOfTeam,
+  getDivisionPermsIntOfTeam,
+  validateRosterSize,
 } = require("../../utils/database-utils");
 
 const mainDatabase = require("../../../database/main/main");
@@ -19,6 +22,7 @@ const {
   MessageEmbed,
   MessageActionRow,
   MessageSelectMenu,
+  CachedManager,
 } = require("discord.js");
 const { FREE_AGENT_ROLE_ID } = require("../../config/roles");
 const { TRANSACTIONS_ID } = require("../../config/channels");
@@ -28,74 +32,35 @@ const { successEmbedCreator } = require("../../utils/embeds");
 const updateTeamRosters = require("../../updaterosters");
 
 const getTeamPlayersBasedOnManagerStatus = async (
-  player_id,
-  divisionOption,
-  teamProfile
+  managerTeamProfile,
+  teamProfile,
+  playerID
 ) => {
-  const { team_id, division_id: teamDivisionID } = teamProfile;
+  const { generalManagerID, assistantManagerIDs } =
+    getTeamManagerIDs(teamProfile);
 
-  const getTeamPlayersAndManagers = async () => {
-    if (divisionOption === "division_1") {
-      // Check if they have perms
-      const hasPermsToManageD1 = teamDivisionID == 1;
-
-      if (!hasPermsToManageD1)
-        throw new InvalidPermissionError(`You are not a manager of a D1 Team`);
-
-      const { generalManagerID, assistantManagerIDs } =
-        getTeamManagerIDs(teamProfile);
-
-      return {
-        teamPlayers: await mainDatabase.getPlayersByTeam(team_id),
-        generalManagerID,
-        assistantManagerIDs,
-      };
-    }
-
-    if (divisionOption === "division_2") {
-      // If the player is a GM of a divison one team, that means he has access to D2 teams roster
-      if (teamDivisionID == 1) {
-        // Show his D2 Team
-        const affiliateTeamProfile = await mainDatabase.getTeamsAffiliate(
-          team_id
-        );
-
-        const { generalManagerID, assistantManagerIDs } =
-          getTeamManagerIDs(affiliateTeamProfile);
-
-        return {
-          teamPlayers: await mainDatabase.getPlayersByTeam(
-            affiliateTeamProfile.team_id
-          ),
-          generalManagerID,
-          assistantManagerIDs,
-        };
-      }
-
-      // If the player is D2, just get the D2 team
-      const { generalManagerID, assistantManagerIDs } =
-        getTeamManagerIDs(teamProfile);
-      return {
-        teamPlayers: await mainDatabase.getPlayersByTeam(team_id),
-        generalManagerID,
-        assistantManagerIDs,
-      };
-    }
-  };
-
-  const { teamPlayers, generalManagerID, assistantManagerIDs } =
-    await getTeamPlayersAndManagers();
+  const teamPlayers = await mainDatabase.getPlayersByTeam(teamProfile.team_id);
 
   // If the player making the command is a General Manager, he can cut anyone besides himself, if hes an AGM, he may only cut players below his rank
 
-  const isGeneralManager = player_id === generalManagerID;
+  const isManagerFromHigherAffiliate =
+    getDivisionPermsIntOfTeam(managerTeamProfile) >
+    getDivisionPermsIntOfTeam(teamProfile);
 
+  console.log(isManagerFromHigherAffiliate);
+
+  if (isManagerFromHigherAffiliate) return teamPlayers;
+
+  const isGeneralManager = playerID === generalManagerID;
+
+  // If they are GM, return teamPlayers without the GM
   if (isGeneralManager) {
     return teamPlayers.filter(
       (player) => player.player_id !== generalManagerID
     );
   }
 
+  // If they are an AGM return teamplayers without GMs and AGM
   return teamPlayers.filter(
     (player) =>
       player.player_id != generalManagerID &&
@@ -103,27 +68,6 @@ const getTeamPlayersBasedOnManagerStatus = async (
         (assistantID) => assistantID != player.player_id
       )
   );
-};
-
-const validateRosterSize = async (divisionOption, team_id) => {
-  const { roster_limit_d1, roster_limit_d2 } = await mainDatabase.getConfig();
-  const teamPlayers = await mainDatabase.getPlayersByTeam(team_id);
-
-  if (divisionOption === "division_1") {
-    if (teamPlayers.length == roster_limit_d1)
-      throw new CommandError(
-        `Insufficient Roster Space`,
-        `Such a signing would put your team over the roster limit of **${roster_limit_d1}** for this division.`
-      );
-  }
-
-  if (divisionOption === "division_2") {
-    if (teamPlayers.length == roster_limit_d2)
-      throw new CommandError(
-        `Insufficient Roster Space`,
-        `Such a signing would put your team over the roster limit of **${roster_limit_d2}** for this division.`
-      );
-  }
 };
 
 const getTeamEmbed = async (teamID) => {
@@ -185,8 +129,7 @@ const getTeamEmbed = async (teamID) => {
           teamWaiverClaimsMapped.length === 0
             ? "None"
             : teamWaiverClaimsMapped.join("\n"),
-      },
-      { name: "Reschedules", value: `None` }
+      }
     );
 
   return teamEmbed;
@@ -224,13 +167,14 @@ async function teamCmd(interaction) {
 }
 
 async function signCmd(interaction) {
-  // Get the user's team, if no team throw error
+  // Get the team the user manages, if no team throw error
   const { managerTeamProfile } = await getManagerAndTeamFromInteractionUser(
     interaction.user.id
   );
 
   const divisionOption = interaction.options.getString("division");
 
+  // Get the team the user is attempting to manage
   const teamProfile = await getTeamByDivisionOption(
     divisionOption,
     managerTeamProfile
@@ -241,6 +185,12 @@ async function signCmd(interaction) {
       `That team does not exist or you are not a manager of it`
     );
 
+  const canManageTeam = hasManagerPermsOfTeam(managerTeamProfile, teamProfile);
+
+  if (!canManageTeam)
+    throw new InvalidPermissionError(
+      `You do not have manager permissions over **${teamProfile.name}**`
+    );
   const { freeAgentPlayers, waiverPlayers } =
     await mainDatabase.getFreeAgentsAndWaivers();
 
@@ -289,8 +239,7 @@ async function signCmd(interaction) {
   }
 
   // Now lets make sure they have suitable roster space
-
-  await validateRosterSize(divisionOption, teamProfile.team_id);
+  await validateRosterSize(teamProfile);
 
   const buttons = getCancelAndConfirmButtonRow("signConfirm");
 
@@ -315,14 +264,9 @@ async function signCmd(interaction) {
     ephemeral: true,
   });
 
-  updateSignUpList(interaction.client);
-  updateTeamRosters(interaction.client);
-
-  const filter = (i) =>
-    i.user.id === interaction.user.id && i.customId === "signConfirm";
-
   const collector = interaction.channel.createMessageComponentCollector({
-    filter,
+    filter: (i) =>
+      i.user.id === interaction.user.id && i.customId === "signConfirm",
     componentType: "BUTTON",
     time: 15000,
     max: 1,
@@ -400,10 +344,28 @@ async function releaseCmd(interaction) {
 
   const divisionOption = interaction.options.getString("division");
 
-  const teamPlayers = await getTeamPlayersBasedOnManagerStatus(
-    managerProfile.player_id,
+  // Get the team the user is attempting to manage
+  const teamProfile = await getTeamByDivisionOption(
     divisionOption,
     managerTeamProfile
+  );
+
+  if (teamProfile === null)
+    throw new InvalidPermissionError(
+      `That team does not exist or you are not a manager of it`
+    );
+
+  const canManageTeam = hasManagerPermsOfTeam(managerTeamProfile, teamProfile);
+
+  if (!canManageTeam)
+    throw new InvalidPermissionError(
+      `You do not have manager permissions over **${teamProfile.name}**`
+    );
+
+  const teamPlayers = await getTeamPlayersBasedOnManagerStatus(
+    managerTeamProfile,
+    teamProfile,
+    managerProfile.player_id
   );
 
   if (teamPlayers.length === 0)
@@ -411,8 +373,6 @@ async function releaseCmd(interaction) {
       "No players",
       `There are no active players on that team that can be released!`
     );
-
-  // Cant release yourself
 
   const messageSelect = new MessageSelectMenu()
     .setCustomId("playerSelectRelease")
@@ -552,7 +512,8 @@ async function releaseCmd(interaction) {
       updateSignUpList(interaction.client);
       updateTeamRosters(interaction.client);
 
-      sendInteractionCompleted(buttonInteraction);
+      sendInteractionCompleted(i);
+      sendInteractionTimedOut(interaction);
     });
 
     buttonCollector.on("end", (collected) => {
@@ -583,6 +544,13 @@ async function waiverCmd(interaction) {
   if (teamProfile === null)
     throw new InvalidPermissionError(
       `That team does not exist or you are not a manager of it`
+    );
+
+  const canManageTeam = hasManagerPermsOfTeam(managerTeamProfile, teamProfile);
+
+  if (!canManageTeam)
+    throw new InvalidPermissionError(
+      `You do not have manager permissions over **${teamProfile.name}**`
     );
 
   const playerNameOption = interaction.options.getString("player_name");
