@@ -1,21 +1,60 @@
 const mainDatabase = require("../../database/main/main");
 const { InvalidPermissionError } = require("./errors");
 
-const getTeamByDivisionOption = async (divisionOption, teamProfile) => {
-  if (teamProfile.division_id == 2 && divisionOption === "division_1")
-    throw new InvalidPermissionError(
-      `You are not a manager of a division one team`
-    );
+const getDivisionPermsIntOfTeam = (teamProfile) => {
+  // Permissions expressed as an int
+  const DIVISION_PERMISSIONS_MAP = {
+    1: 10,
+    2: 9,
+    3: 8,
+  };
 
-  return divisionOption === "division_1" || teamProfile.division_id == 2
-    ? teamProfile
-    : await mainDatabase.getTeamsAffiliate(teamProfile.team_id);
+  return DIVISION_PERMISSIONS_MAP[teamProfile.division_id];
 };
 
-const getManagerAndTeamFromInteractionUser = async (interactionUserID) => {
-  const managerProfile = await mainDatabase.getPlayerByDiscordID(
-    interactionUserID
-  );
+const validateRosterSize = async (teamProfile) => {
+  const { division_id, team_id } = teamProfile;
+  const { roster_limit_d1, roster_limit_d2, roster_limit_d3 } =
+    await mainDatabase.getConfig();
+  const teamPlayers = await mainDatabase.getPlayersByTeam(team_id);
+
+  const ROSTER_LIMITS_MAP = {
+    1: roster_limit_d1,
+    2: roster_limit_d2,
+    3: roster_limit_d3,
+  };
+
+  const rosterLimitForTeamsDivision = ROSTER_LIMITS_MAP[division_id];
+
+  if (teamPlayers.length == rosterLimitForTeamsDivision)
+    throw new CommandError(
+      `Insufficient Roster Space`,
+      `Such a signing would put your team over the roster limit of **${rosterLimitForTeamsDivision}** for this division.`
+    );
+};
+
+const hasManagerPermsOfTeam = (managerTeam, teamProfile) => {
+  const managerAccessLevel = getDivisionPermsIntOfTeam(managerTeam);
+  const teamAccessLevel = getDivisionPermsIntOfTeam(teamProfile);
+
+  console.log(managerAccessLevel, teamAccessLevel);
+  // To manage a team you must have equal or higher perms than the team you want to manage
+
+  return managerAccessLevel >= teamAccessLevel;
+};
+
+const getTeamByDivisionOption = async (divisionOption, teamProfile) => {
+  const teamsAffiliates = await mainDatabase.getTeamsAffiliates(teamProfile);
+
+  console.log(teamsAffiliates);
+
+  const organizationsTeams = [...teamsAffiliates, teamProfile];
+
+  return organizationsTeams.find((team) => team.division_id == divisionOption);
+};
+
+const getManagerAndTeamFromInteractionUser = async (discordID) => {
+  const managerProfile = await mainDatabase.getPlayerByDiscordID(discordID);
 
   if (managerProfile === null)
     throw new InvalidPermissionError(
@@ -53,4 +92,7 @@ module.exports = {
   getTeamByDivisionOption,
   getManagerAndTeamFromInteractionUser,
   getTeamManagerIDs,
+  hasManagerPermsOfTeam,
+  getDivisionPermsIntOfTeam,
+  validateRosterSize,
 };
