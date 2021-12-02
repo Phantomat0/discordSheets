@@ -2,17 +2,9 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { GreenCheck } = require("../utils/icons");
 const mainDatabase = require("../../database/main/main");
 const { MY_GM_ID, TRANSACTIONS_ID } = require("../config/channels");
-const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
+const { MessageEmbed } = require("discord.js");
 const { CommandError } = require("../utils/errors");
-const { FREE_AGENT_ROLE_ID } = require("../config/roles");
 const { ADMIN_ROLE_ID } = require("../config/roles");
-
-const TEAMS = [
-  ["Hellfish", "1"],
-  ["Seoul Trains", "2"],
-  ["Dayton Futsal Club", "3"],
-  ["Savage Hax", "4"],
-];
 
 module.exports = {
   allowedRoles: [ADMIN_ROLE_ID],
@@ -20,119 +12,55 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("draft")
     .setDescription("Draft a player to a team")
+
     .addStringOption((option) =>
       option
-        .setName("division")
-        .setDescription("Division")
-        .setRequired(true)
-        .addChoice("Division 1", "division_1")
-        .addChoice("Division 2", "division_2")
-    )
-    .addStringOption((option) => {
-      option.setName("team_id").setDescription("Team Name").setRequired(true);
-
-      TEAMS.forEach((position) => {
-        const [name, id] = position;
-        option.addChoice(name, id);
-      });
-
-      return option;
-    })
-    .addIntegerOption((option) =>
-      option
-        .setName("player_id")
-        .setDescription("The player's ID")
+        .setName("player_name")
+        .setDescription("The player's name")
         .setRequired(true)
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    const playerNameOption = interaction.options.getString("player_name");
 
-    const divisionOption = interaction.options.getString("division");
-    const teamIDOption = interaction.options.getString("team_id");
-    const playerIDOption = interaction.options.getInteger("player_id");
+    const playerProfile = await mainDatabase.getPlayerByName(playerNameOption);
 
-    const freeAgents = await mainDatabase.getFreeAgents();
-
-    const playerProfile = await mainDatabase.getPlayer(playerIDOption);
+    console.log(playerProfile);
 
     if (playerProfile === null)
       throw new CommandError(
         "Player does not exist",
-        `Player [${playerIDOption}] does not exist`
+        `Player **${playerNameOption}** does not exist`
       );
 
-    const isFreeAgent =
-      freeAgents.find((player) => player.player_id == playerIDOption) ?? null;
+    const NO_TEAM_ID = "0";
 
-    if (isFreeAgent === null)
+    if (playerProfile.current_team_id !== NO_TEAM_ID)
       throw new CommandError(
-        "Not a draft signup",
-        `${playerProfile.player_name} is not eligible to be signed`
+        "Illegal Draft",
+        `Player **${playerNameOption}** is already on a team`
       );
 
-    let team;
-    const discordUser =
-      interaction.guild.members.cache.get(playerProfile.discord_id) ?? null;
-
-    if (divisionOption === "division_1") {
-      const teamProfile = await mainDatabase.getTeam(teamIDOption);
-
-      team = teamProfile;
-
-      await mainDatabase.updatePlayerTeam(playerIDOption, teamProfile.team_id);
-
-      discordUser?.roles.remove(FREE_AGENT_ROLE_ID);
-      discordUser?.roles.add(teamProfile.role_id);
-    } else {
-      const teamProfile = await mainDatabase.getTeam(teamIDOption);
-      const affiliateTeamProfile = await mainDatabase.getTeamsAffiliate(
-        teamProfile.team_id
-      );
-      await mainDatabase.updatePlayerTeam(
-        playerIDOption,
-        affiliateTeamProfile.team_id
-      );
-
-      team = affiliateTeamProfile;
-
-      discordUser?.roles.remove(FREE_AGENT_ROLE_ID);
-      discordUser?.roles.add(affiliateTeamProfile.role_id);
-    }
-
-    setTimeout(() => {
-      const timeOutEmbed = new MessageEmbed().setTitle("Command timed out");
-      interaction.editReply({
-        embeds: [timeOutEmbed],
-        components: [],
-      });
-    }, 15000);
+    // Team drafting is the team who is making the pick, teamPick is the team who originally had the team, just incase there were trades
+    const { teamDrafting, round, overall, teamPick } =
+      await mainDatabase.draftPlayer(playerProfile);
 
     const successEmbed = new MessageEmbed()
       .setColor("#75FF33")
       .setTitle(`${GreenCheck} Successful draft sign!`)
       .setDescription(
-        `${playerProfile.player_name} has been signed to the **${team.name}**!`
+        `${playerProfile.player_name} has been drafted to **${teamDrafting.name}**!`
       )
       .setTimestamp();
 
-    interaction.editReply({
-      embeds: [successEmbed],
+    // Now send it to the draft channel
+    const draftStr = `Round ${round} Pick ${overall}, <@&${teamDrafting.role_id}> select: **${playerProfile.player_name}** <@${playerProfile.discord_id}>`;
+    await interaction.client.channels.cache.get(TRANSACTIONS_ID).send({
+      content: draftStr,
     });
 
-    const currentPickInt = "1";
-
-    const draftEmbed = new MessageEmbed()
-      .setColor(team.color)
-      .setAuthor(
-        `#${currentPickInt} ${team.name} select ${playerProfile.player_name}`,
-        team.logo_url
-      )
-      .setDescription(`<@${playerProfile.discord_id}>`)
-      .setTimestamp();
-
-    await interaction.client.channels.cache.get(TRANSACTIONS_ID).send({
-      embeds: [draftEmbed],
+    await interaction.editReply({
+      embeds: [successEmbed],
     });
   },
 };
