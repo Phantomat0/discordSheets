@@ -2,10 +2,13 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const { MY_GM_ID } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 const subCommandsMap = require("./subcommands/gm-sub");
-const { GENERAL_MANAGER_ROLE_ID } = require("../config/roles");
+const {
+  GENERAL_MANAGER_ROLE_ID,
+  ASSISTANT_MANAGER_ROLE_ID,
+} = require("../config/roles");
 
 module.exports = {
-  allowedRoles: [GENERAL_MANAGER_ROLE_ID],
+  allowedRoles: [GENERAL_MANAGER_ROLE_ID, ASSISTANT_MANAGER_ROLE_ID],
   allowedChannels: [MY_GM_ID],
   data: new SlashCommandBuilder()
     .setName("gm")
@@ -57,7 +60,7 @@ module.exports = {
             .setDescription("Division")
             .addChoice("Division 1", "1")
             .addChoice("Division 2", "2")
-            .addChoice("Division 3", "3")
+            // .addChoice("Division 3", "3")
             .setRequired(true)
         )
         .addStringOption((option) =>

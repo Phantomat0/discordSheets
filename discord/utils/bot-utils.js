@@ -38,8 +38,6 @@ async function updateSignUpList(client) {
   const { freeAgentPlayers, waiverPlayers } =
     await mainDatabase.getFreeAgentsAndWaivers();
 
-  console.log(freeAgentPlayers, waiverPlayers);
-
   const PlayersManager = await new CacheManager(mainDatabase).loadCache(
     "players",
     mainDatabase.getPlayers
@@ -47,9 +45,9 @@ async function updateSignUpList(client) {
 
   const mapToSignUpList = (playerArray) => {
     return playerArray.map((signUpObj) => {
-      const { player_id, player_display_name } = signUpObj;
+      const { player_id, player_display_name, position } = signUpObj;
       const { discord_id } = PlayersManager.getPlayer(player_id);
-      return `${player_display_name} <@${discord_id}>`;
+      return `${player_display_name} <@${discord_id}>  \`${position}\``;
     });
   };
 
@@ -61,14 +59,12 @@ async function updateSignUpList(client) {
     .setTitle("Draft Signups")
     .setColor("#FF0055")
     .setDescription(
-      `**Draftees: ${waiverPlayersMapped.length}**\n${waiverPlayersMapped.join(
+      `**Waivers: ${waiverPlayersMapped.length}**\n${waiverPlayersMapped.join(
         "\n"
       )}\n\n**Free Agents: ${
         freeAgentPlayersMapped.length
       }**\n${freeAgentPlayersMapped.join("\n")}`
     );
-
-  console.log(signedUpPlayersEmbed);
 
   await client.channels.cache
     .get(SIGNUP_ID)

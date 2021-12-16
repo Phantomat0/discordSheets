@@ -46,8 +46,6 @@ const hasManagerPermsOfTeam = (managerTeam, teamProfile) => {
 const getTeamByDivisionOption = async (divisionOption, teamProfile) => {
   const teamsAffiliates = await mainDatabase.getTeamsAffiliates(teamProfile);
 
-  console.log(teamsAffiliates);
-
   const organizationsTeams = [...teamsAffiliates, teamProfile];
 
   return organizationsTeams.find((team) => team.division_id == divisionOption);

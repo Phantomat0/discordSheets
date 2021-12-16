@@ -22,7 +22,7 @@ const SHEET_TABLES = {
   },
   FANTASY_TEAMS: {
     name: "fantasy-teams",
-    range: "fantasy-teams!A1:X",
+    range: "fantasy-teams!A1:AC",
   },
   FANTASY_RANKINGS: {
     name: "fantasy-rankings",
@@ -258,7 +258,7 @@ class MasterSheetManager {
     const rosterArray = [];
 
     // Maps the two arrays into one object
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const currentPlayerStr = `player${i + 1}`;
       rosterArray.push({
         name: roster[`week${currentWeek}_${currentPlayerStr}`],
@@ -292,6 +292,8 @@ class MasterSheetManager {
       (pick) => pick.hasOwnProperty("draftee") === false
     );
 
+    console.log(currentPickRow);
+
     this._sheet.findOneAndUpdate(
       this._sheetTables.DRAFT,
       [playerProfile.player_name],
@@ -311,7 +313,7 @@ class MasterSheetManager {
 
     return {
       teamDrafting,
-      teamPick: currentPickRow.team_pick,
+      teamPickName: currentPickRow.team_pick,
       round: currentPickRow.round,
       overall: currentPickRow.overall,
     };
@@ -460,11 +462,16 @@ class MasterSheetManager {
   }
 
   async getTeamByName(teamName) {
-    return await this._sheet.findOne(this._sheetTables.TEAMS, {
-      name: {
-        value: teamName,
-      },
-    });
+    if (!this._teams) {
+      this._teams = await this._sheet.listMany(this._sheetTables.TEAMS);
+    }
+
+    return this._teams.find((team) => team.name == teamName);
+    // return await this._sheet.findOne(this._sheetTables.TEAMS, {
+    //   name: {
+    //     value: teamName,
+    //   },
+    // });
   }
 
   async checkIfVoted(divison, playerID) {

@@ -11,14 +11,6 @@ module.exports = {
     .setName("fantasy")
     .setDescription("Fantasy Manager")
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("join")
-        .setDescription("Join the Fantasy League")
-        .addStringOption((option) =>
-          option.setName("team").setRequired(true).setDescription("Team Name")
-        )
-    )
-    .addSubcommand((subcommand) =>
       subcommand.setName("me").setDescription("View your fantasy dashboard")
     )
     .addSubcommand((subcommand) =>
@@ -26,16 +18,19 @@ module.exports = {
         .setName("edit")
         .setDescription("Edit your fantasy lineup")
         .addStringOption((option) =>
-          option.setName("player-1").setDescription("Player 1")
+          option.setName("player-1").setDescription("Striker")
         )
         .addStringOption((option) =>
-          option.setName("player-2").setDescription("Player 2")
+          option.setName("player-2").setDescription("Midfielder")
         )
         .addStringOption((option) =>
-          option.setName("player-3").setDescription("Player 3")
+          option.setName("player-3").setDescription("Goalkeeper")
         )
         .addStringOption((option) =>
-          option.setName("player-4").setDescription("Player 2")
+          option.setName("player-4").setDescription("FLEX")
+        )
+        .addStringOption((option) =>
+          option.setName("player-5").setDescription("FLEX")
         )
     )
     .addSubcommand((subcommand) =>

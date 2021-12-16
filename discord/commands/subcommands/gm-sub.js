@@ -195,10 +195,10 @@ async function signCmd(interaction) {
     await mainDatabase.getFreeAgentsAndWaivers();
 
   if (freeAgentPlayers.length === 0)
-    throw {
-      type: "No players",
-      message: `There are no Free Agents to sign!`,
-    };
+    throw new CommandError(
+      "No eligible players",
+      "There are no Free Agents to sign!"
+    );
 
   const playerNameOption = interaction.options.getString("player_name");
 

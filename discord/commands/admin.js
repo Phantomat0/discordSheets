@@ -5,20 +5,31 @@ const subCommandsMap = require("./subcommands/admin-sub");
 const { ADMIN_ROLE_ID } = require("../config/roles");
 
 const D1TEAMS = [
-  ["Hellfish", "1"],
+  ["Dayton Futsal Club", "1"],
   ["Seoul Trains", "2"],
-  ["Dayton Futsal Club", "3"],
-  ["Savage Hax", "4"],
+  ["Vicious VampS", "3"],
+  ["Aces H.C.", "4"],
+  ["Savage Hax", "5"],
+  ["Haxball's Peak Futsal Team", "6"],
 ];
 
 const D2TEAMS = [
-  ["Dallas Dynasty", "5"],
-  ["Busan Tigers", "6"],
   ["Dayton Futsal Academy", "7"],
-  ["Imperial", "8"],
+  ["Busan Tigers", "8"],
+  ["Ultimate Uzis", "9"],
+  ["Spades H.C.", "10"],
+  ["Imperial", "11"],
+  ["Panda Academy", "12"],
 ];
 
-const D3TEAMS = [["Raiders", "9"]];
+const D3TEAMS = [
+  ["Dayton New Player Academy", "13"],
+  ["Incheon Impala", "14"],
+  ["Lil Babys", "15"],
+  ["Clovers H.C.", "16"],
+  ["Pikachu Haxball Team", "17"],
+  ["Haxball's Futsal Youth Academy", "18"],
+];
 
 module.exports = {
   allowedRoles: [ADMIN_ROLE_ID],

@@ -73,16 +73,23 @@ async function meCmd(interaction) {
 
   const { roster, teamName, totalPoints } = playerFantasyTeam;
 
-  const rosterMappedStr = roster
-    .map((player) => `${player.name} ${player.points}`)
+  const [striker, midfielder, goalkeeper, ...flex] = roster;
+
+  const flexMappedStr = flex
+    .map((player) => `FLEX | ${player.name} ${player.points}`)
     .join("\n");
 
+  // const rosterStr = `\`\`\`css\nST | ${striker.name} ${striker.points}\`\`\`\n\`\`\`css\nMID | ${midfielder.name} ${midfielder.points}\`\`\`\n\`\`\`fix\n${goalkeeper.name} ${goalkeeper.points}\`\`\`\nFLEX\n\`\`\`arm\n${flexMappedStr}\`\`\``;
+
+  const rosterStr = `\`\`\`css\nST   | ${striker.name} ${striker.points}\nMID  | ${midfielder.name} ${midfielder.points}\nGK   | ${goalkeeper.name} ${goalkeeper.points}\n${flexMappedStr}\`\`\``;
   const teamEmbed = new MessageEmbed()
-    .setColor("#00FFFF")
+    .setColor("#2F3136")
     .setTitle(teamName)
     .setDescription(
-      `Manager: **${playerProfile.player_name}**\nTotal Points\`\`\`css\n${totalPoints}\`\`\`\nCurrent Lineup\n\`\`\`css\n${rosterMappedStr}\`\`\``
+      `Manager: ${playerProfile.player_name}\n**Total Points**\`\`\`fix\n${totalPoints}\`\`\`\n**Current Lineup**\n${rosterStr}`
     );
+
+  //      `Manager: **${playerProfile.player_name}**\nTotal Points\`\`\`css\n${totalPoints}\`\`\`\n**Current Lineup**\n\`\`\`css\n${rosterMappedStr}\`\`\``
 
   interaction.editReply({
     embeds: [teamEmbed],
@@ -120,7 +127,7 @@ async function editCmd(interaction) {
 
   const playerOptions = [];
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     playerOptions.push({
       name: `player${i + 1}`,
       value: options.getString(`player-${i + 1}`),
@@ -223,7 +230,7 @@ async function editCmd(interaction) {
   const buttons = getCancelAndConfirmButtonRow("fantasyEditConfirm");
 
   const confirmEmbed = new MessageEmbed()
-    .setColor("#00FFFF")
+    .setColor("#2F3136")
     .setTitle(`Confirm fantasy lineup changes`)
     .setDescription(changesStr);
 
@@ -255,7 +262,7 @@ async function editCmd(interaction) {
     );
 
     const transactionEmbed = new MessageEmbed()
-      .setColor("#00FFFF")
+      .setColor("#2F3136")
       .setTitle(`${playerProfile.player_name} has made changes to his lineup!`)
       .setDescription(`\`\`\`${teamName}\`\`\`\n${changesStr}`);
 
@@ -305,7 +312,7 @@ async function otherCmd(interaction) {
     .join("\n");
 
   const teamEmbed = new MessageEmbed()
-    .setColor("#00FFFF")
+    .setColor("#2F3136")
     .setTitle(teamName)
     .setDescription(
       `Manager: **${playerProfile.player_name}**\nTotal Points \`\`\`css\n0\`\`\`\nCurrent Lineup\n\`\`\`css\n${rosterMappedStr}\`\`\``

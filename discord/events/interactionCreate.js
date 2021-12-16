@@ -53,11 +53,11 @@ const handleCommand = async (interaction) => {
           .setTitle(error.name)
           .setDescription(error.getMessage());
       } else {
+        console.log(error);
         interaction.client.channels.cache.get(BOT_ERROR_ID).send({
           content: error.message,
         });
 
-        console.log(error);
         return new MessageEmbed()
           .setColor("#C70039")
           .setTitle(`${Warning} Command Error`)

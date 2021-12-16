@@ -121,6 +121,12 @@ module.exports = {
 
     const statsEmbeds = await getStatsEmbedDependingOnOption();
 
+    if (statsEmbeds.length === 0)
+      throw new CommandError(
+        "Invalid Player",
+        `This player does not have any stats!`
+      );
+
     interaction.editReply({
       embeds: statsEmbeds,
     });
