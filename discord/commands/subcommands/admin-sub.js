@@ -36,6 +36,9 @@ async function appointManagerCmd(interaction) {
   const positionOption = options.getString("position");
   const playerNameOption = options.getString("player_name");
 
+  const promotionStr =
+    positionOption === "gm" ? "Manager" : "Assistant Manager";
+
   const teamProfile = await mainDatabase.getTeam(teamIDOption);
 
   const { generalManagerID, assistantManagerIDs } =
@@ -496,15 +499,16 @@ async function tradeCmd(interaction) {
       const team1PlayerIDs = team1SelectInteraction.values;
       const team2PlayerIDs = team2SelectInteraction.values;
 
-      const players = await mainDatabase.getPlayers();
+      const PlayerManager = await new CacheManager(mainDatabase).loadCache(
+        "players",
+        mainDatabase.getPlayers
+      );
 
       const getPlayerStrForEmbed = (playerIDsArray) => {
         return playerIDsArray
           .map((playerID) => {
-            const playerProfile = players.find(
-              (player) => player.player_id === playerID
-            );
-            return `${playerProfile.player_name} <@${playerProfile.discord_id}>`;
+            const player = PlayerManager.getPlayer(playerID);
+            return `${player.player_name} <@${player.discord_id}>`;
           })
           .join("\n");
       };
@@ -555,71 +559,58 @@ async function tradeCmd(interaction) {
 
         // Ok now we have to do all the changing teams
 
-        const updatePlayerTeam = async (
+        const TeamsManager = await new CacheManager(mainDatabase).loadCache(
+          "teams",
+          mainDatabase.getTeams
+        );
+
+        const updatePlayersTeams = (
           playerIDsArray,
           currentTeamProfile,
           newTeamProfile
         ) => {
+          // newTeamProfile isn't exactly the new team, since it has to be adjusted for division
+
+          const tradeDMEmbed = new MessageEmbed()
+            .setColor(newTeamProfile.color)
+            .setAuthor(`American Futsal League`, LOGO_URL)
+            .setTitle(`You have been traded!`)
+            .setDescription(
+              `You have been traded from ${currentTeamProfile.name} to **${newTeamProfile.name}**`
+            );
+
           playerIDsArray.forEach(async (playerID) => {
-            // First we have to check if this player is d1 or d2
-            const playerProfile = players.find(
-              (player) => player.player_id === playerID
+            const playerProfile = PlayerManager.getPlayer(playerID);
+
+            const playerTeam = TeamsManager.getTeam(playerProfile.team_id);
+
+            sendMessageIfValidUser(interaction, playerProfile.discord_id, {
+              embeds: [tradeDMEmbed],
+            });
+
+            // Now we have to adjust newTeamProfile to the division the play is in
+            newTeamProfile = TeamsManager.getTeamsDivisionAffiliate(
+              newTeamProfile.team_id,
+              playerTeam.division_id
             );
 
-            const discordMember = await getDiscordMember(
-              interaction,
-              playerProfile.discord_id
-            );
-
-            if (discordMember) {
-              try {
-                const tradeDMEmbed = new MessageEmbed()
-                  .setColor(newTeamProfile.color)
-                  .setAuthor(`American Futsal League`, LOGO_URL)
-                  .setTitle(`You have been traded!`)
-                  .setDescription(
-                    `You have been traded from ${currentTeamProfile.name} to **${newTeamProfile.name}**`
-                  );
-
-                sendMessageIfValidUser(interaction, playerProfile.discord_id, {
-                  embeds: [tradeDMEmbed],
-                });
-              } catch (error) {
-                console.log(error);
-              }
-            }
-
-            const isAD2Player = parseInt(playerProfile.current_team_id) > 4;
-
-            // If hes a d2 player, we have to change his team to the D2 team and remove his d2 role and add the new d2 role
-            if (isAD2Player) {
-              const d2CurrentTeamProfile = await mainDatabase.getTeam(
-                currentTeamProfile.team_id
-              );
-
-              const d2NewTeamProfile = await mainDatabase.getTeamsAffiliate(
-                newTeamProfile.team_id
-              );
-
-              mainDatabase.updatePlayerTeam(playerID, d2NewTeamProfile.team_id);
-              if (discordMember) {
-                // discordMember.roles.remove(d2CurrentTeamProfile.role_id);
-                // discordMember.roles.add(d2NewTeamProfile.role_id);
-              }
-              return;
-            }
+            // Now lets update the team in database, and discord
 
             mainDatabase.updatePlayerTeam(playerID, newTeamProfile.team_id);
-            if (discordMember) {
-              // discordMember.roles.remove(currentTeamProfile.role_id);
-              // discordMember.roles.add(newTeamProfile.role_id);
-            }
+
+            // const discordMember = await getDiscordMember(
+            //   interaction,
+            //   playerProfile.discord_id
+            // );
+
+            // discordMember.roles.remove(currentTeamProfile.role_id);
+            // discordMember.roles.add(newTeamProfile.role_id);
           });
         };
 
-        // Dont await these
-        updatePlayerTeam(team1PlayerIDs, team1Profile, team2Profile);
-        updatePlayerTeam(team2PlayerIDs, team2Profile, team1Profile);
+        // Update the teams of the players
+        updatePlayersTeams(team1PlayerIDs, team1Profile, team2Profile);
+        updatePlayersTeams(team2PlayerIDs, team2Profile, team1Profile);
 
         const team1Emoji =
           interaction.guild.emojis.cache.find(
@@ -644,7 +635,7 @@ async function tradeCmd(interaction) {
               stipulationStr ? `*Stipulation: ${stipulationStr}*\n\n` : ""
             }Who won this trade?`
           )
-          .setColor("#EA003D")
+          .setColor("#EA003D") // 36393F
           .setFooter(
             `${buttonInteraction.user.username}`,
             buttonInteraction.user.displayAvatarURL()
@@ -669,8 +660,6 @@ async function tradeCmd(interaction) {
         sendInteractionCompleted(team2SelectInteraction);
         updateTeamRosters(interaction.client);
       });
-
-      // Make the confirm embed, confirm buttons
     });
   });
 }
@@ -678,7 +667,7 @@ async function tradeCmd(interaction) {
 function updateEmbedsCmd(interaction) {
   updateSignUpList(interaction.client);
   updateTeamRosters(interaction.client);
-  updateFantasy(interaction.client);
+  // updateFantasy(interaction.client);
 
   const successEmbed = successEmbedCreator("Up to date!", "Embeds updated!");
 
