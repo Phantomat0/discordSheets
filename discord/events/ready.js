@@ -5,6 +5,7 @@ const {
   REGISTRATION_ID,
   AWARD_VOTING_ID,
   SIGNUP_ID,
+  TICKETS_ID,
 } = require("../config/channels");
 const { LOGO_URL } = require("../config/logo");
 const { GUILD_ID } = require("../config/config");
@@ -24,6 +25,7 @@ const {
   Bell,
   MoneyBag,
   Abascus,
+  Ballot,
 } = require("../utils/icons");
 const { getCancelAndConfirmButtonRow } = require("../utils/buttons");
 const { successEmbedCreator } = require("../utils/embeds");
@@ -276,12 +278,12 @@ async function sendInformation(client) {
     )
     .addField(
       "What if I am an inexperienced or new player?",
-      "Thankfully, the league is split into three divisions, Division 1 for more experienced players and Division 2 for intermediate players and Division 3 for new players who are looking to prove themselves.",
+      "Thankfully, the league is split into three divisions, Division 1 for more experienced players, Division 2 for intermediate players, and Division 3 for new players who are looking to prove themselves.",
       false
     )
     .addField(
       "When are games played?",
-      `**Division 2** Tuesdays and Thursdays 7PM EST \n **Division 2** Tuesdays and Thursdays 6PM EST \n **Division 3** Mondays and Fridays 6PM EST`,
+      `**Division 1** Tuesdays and Thursdays 7PM EST \n **Division 2** Tuesdays and Thursdays 6PM EST \n **Division 3** Mondays and Fridays 6PM EST`,
       false
     )
     .addField(
@@ -291,12 +293,12 @@ async function sendInformation(client) {
     )
     .addField(
       "Who do I contact regarding an issue with the public rooms?",
-      `All public rooms are overseen by pub admins. You can post a claim in the appropriate channel below to get a response back from one of them.\nIssues/Reports: <#896792007723339817>\nBan Appeals: <#895420435586482206>`,
+      `All public rooms are overseen by pub admins. You can post a claim in the appropriate channel below to get a response back from one of them.\nIssues/Reports: <#896792007723339817>`,
       false
     )
     .addField(
       "I was banned from one of the public rooms, how do I get unbanned?",
-      `Post an appeal in <#895420435586482206> and patiently wait for a reply from a pub admin.`,
+      `Create a ban appeal ticket in <#895420435586482206> and patiently wait for a response in <#907811986740478004>`,
       false
     )
     .addField(
@@ -382,17 +384,28 @@ module.exports = {
   async execute(client) {
     console.log("Ready!");
 
-    // deployCommandPermissions(client);
+    deployCommandPermissions(client);
 
     // const dumbEmbed = new MessageEmbed()
     //   .setTitle("Registration")
     //   .setDescription("Test");
+
+    const ticketsEmbed = new MessageEmbed()
+      .setTitle(`${Ballot} Tickets`)
+      .setColor("#5DADEC")
+      .setDescription(
+        `Use this channel to submit support tickets. To submit a ticket, use the **/ticket** command with any of the following options below and fill out the form.\n\n**ban-appeal** For public room ban appeals`
+      );
 
     const awardsEmbed = new MessageEmbed()
       .setTitle("Registration")
       .setDescription(
         "Use the **/register** command to begin the registration process. Fill out your name, position, availability, and info."
       );
+
+    await client.channels.cache.get(TICKETS_ID).send({
+      embeds: [ticketsEmbed],
+    });
 
     // await client.channels.cache.get(SIGNUP_ID).send({
     //   embeds: [dumbEmbed],
