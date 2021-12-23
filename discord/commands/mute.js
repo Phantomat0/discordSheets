@@ -68,6 +68,10 @@ const INFRACTIONS = {
     name: "Disruptive Behaviour",
     duration: 1,
   },
+  cmd_abuse: {
+    name: "Command or Channel Abuse",
+    duration: 48,
+  },
 };
 
 module.exports = {
@@ -90,6 +94,7 @@ module.exports = {
         .addChoice("Harassment", "harassment")
         .addChoice("Threat", "threat")
         .addChoice("Disruptive Behaviour", "disruptive_behaviour")
+        .addChoice("Channel or command abuse", "cmd_abuse")
         .setRequired(true)
     )
     .addStringOption((option) =>
