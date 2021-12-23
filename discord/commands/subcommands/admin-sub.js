@@ -27,7 +27,6 @@ const {
   FREE_AGENT_ROLE_ID,
 } = require("../../config/roles");
 const updateTeamRosters = require("../../updaterosters");
-const updateFantasy = require("../../updatefantasy");
 const CacheManager = require("../../../database/main/cachemanager");
 
 async function appointManagerCmd(interaction) {

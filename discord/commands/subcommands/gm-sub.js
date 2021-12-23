@@ -70,102 +70,6 @@ const getTeamPlayersBasedOnManagerStatus = async (
   );
 };
 
-const getTeamEmbed = async (teamID) => {
-  const teamProfile = await mainDatabase.getTeam(teamID);
-
-  const { name, logo_url, color, division_id } = teamProfile;
-
-  const teamPlayers = await mainDatabase.getPlayersByTeam(teamID);
-
-  const teamPlayersMapped = teamPlayers.map(
-    (player) => `${player.player_name} <@${player.discord_id}>`
-  );
-
-  const teamWaiverClaims = await mainDatabase.getTeamsWaiverClaims(teamID);
-
-  const teamWaiverClaimsMapped = await Promise.all(
-    teamWaiverClaims.map(async (claim) => {
-      const managerProfile = await mainDatabase.getPlayer(claim.manager_id);
-      return `${claim.player_name} by *${managerProfile.player_name} on ${claim.timestamp}*`;
-    })
-  );
-
-  const { generalManagerID, assistantManagerIDs } =
-    getTeamManagerIDs(teamProfile);
-
-  const generalManagerNameProfile = await mainDatabase.getPlayer(
-    generalManagerID
-  );
-
-  const assistantManagersMapped = await Promise.all(
-    assistantManagerIDs.map(async (playerID) => {
-      const playerProfile = await mainDatabase.getPlayer(playerID);
-      return playerProfile.player_name;
-    })
-  );
-
-  const affiliateTeamProfile = await mainDatabase.getTeamsAffiliate(teamID);
-
-  const teamEmbed = new MessageEmbed()
-    .setTitle(`${name} Dashboard`)
-    .setColor(color)
-    .setDescription(
-      `Divison: \`${division_id}\`\nAffiliate Team: \`${
-        affiliateTeamProfile.name
-      }\`\n**General Manager**\n\`\`\`${
-        generalManagerNameProfile?.player_name ?? "None"
-      }\`\`\`\n**Managers**\n\`\`\`${assistantManagersMapped.join("\n")} \`\`\``
-    )
-    .setThumbnail(logo_url)
-    .addFields(
-      {
-        name: "Roster",
-        value:
-          teamPlayersMapped.length === 0 ? "N/A" : teamPlayersMapped.join("\n"),
-      },
-      {
-        name: "Waiver Claims",
-        value:
-          teamWaiverClaimsMapped.length === 0
-            ? "None"
-            : teamWaiverClaimsMapped.join("\n"),
-      }
-    );
-
-  return teamEmbed;
-};
-
-const getTeamEmbeds = async (managerTeamProfile) => {
-  const teamEmbed = await getTeamEmbed(managerTeamProfile.team_id);
-  if (managerTeamProfile.division_id == 2) return [teamEmbed];
-
-  // If d1, we have to get the D1 Team and D2 team
-
-  const affiliateTeamProfile = await mainDatabase.getTeamsAffiliate(
-    managerTeamProfile.team_id
-  );
-
-  const d2TeamEmbed = await getTeamEmbed(affiliateTeamProfile.team_id);
-
-  return [teamEmbed, d2TeamEmbed];
-};
-
-/////////////////////////////////////////////////////////////////////////////////////
-
-async function teamCmd(interaction) {
-  // Get the user's team, if no team throw error
-  const { managerTeamProfile } = await getManagerAndTeamFromInteractionUser(
-    interaction.user.id
-  );
-
-  const teamEmbeds = await getTeamEmbeds(managerTeamProfile);
-
-  interaction.followUp({
-    embeds: teamEmbeds,
-    ephemeral: true,
-  });
-}
-
 async function signCmd(interaction) {
   // Get the team the user manages, if no team throw error
   const { managerTeamProfile } = await getManagerAndTeamFromInteractionUser(
@@ -697,7 +601,6 @@ async function waiverCmd(interaction) {
 }
 
 module.exports = new Map([
-  ["team", teamCmd],
   ["sign", signCmd],
   ["release", releaseCmd],
   ["waiver", waiverCmd],

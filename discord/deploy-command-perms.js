@@ -27,12 +27,16 @@ const getCommandsMapAndPermissions = async (client) => {
 const deployCommandPermissions = async (client) => {
   const [commandsWithRoleIDs, commandsWithId] =
     await getCommandsMapAndPermissions(client);
+
+  console.log(commandsWithId);
   const everyoneID = await client.guilds.cache.get(GUILD_ID).roles.everyone.id;
 
-  //   await client.guilds.cache.get(GUILD_ID).commands.permissions.remove({
-  //     command: "895020258795069540",
-  //     roles: [everyoneID],
-  //   });
+  // await client.guilds.cache.get(GUILD_ID).commands.permissions.remove({
+  //   command: "902291572920578158",
+  //   roles: [everyoneID],
+  // });
+
+  return;
 
   /// Admins get default access to all commands with perms
   const adminDefaultPerms = {
