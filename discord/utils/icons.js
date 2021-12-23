@@ -66,6 +66,7 @@ const ICONS = {
   MoneyBag: String.fromCodePoint(0x1f4b0),
   Abascus: String.fromCodePoint(0x1f9ee),
   Silence: String.fromCodePoint(0x1f92b),
+  Ballot: String.fromCodePoint(0x1f5f3),
 };
 
 module.exports = ICONS;
