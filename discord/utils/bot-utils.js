@@ -46,8 +46,8 @@ async function updateSignUpList(client) {
   const mapToSignUpList = (playerArray) => {
     return playerArray.map((signUpObj) => {
       const { player_id, player_display_name, position } = signUpObj;
-      const { discord_id } = PlayersManager.getPlayer(player_id);
-      return `${player_display_name} <@${discord_id}>  \`${position}\``;
+      const { discord_id, player_name } = PlayersManager.getPlayer(player_id);
+      return `${player_name} <@${discord_id}>  \`${position}\``;
     });
   };
 
