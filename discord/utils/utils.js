@@ -14,7 +14,12 @@ const plural = (number, singular, plural) => {
   return `${number} ${number === 1 ? singular : plural}`;
 };
 
+const randomInRange = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
 module.exports = {
   getDateTimeString,
   plural,
+  randomInRange,
 };
