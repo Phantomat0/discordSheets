@@ -1,5 +1,5 @@
 const mainDatabase = require("../../database/main/main");
-const { InvalidPermissionError } = require("./errors");
+const { InvalidPermissionError, CommandError } = require("./errors");
 
 const getDivisionPermsIntOfTeam = (teamProfile) => {
   // Permissions expressed as an int
@@ -34,6 +34,7 @@ const validateRosterSize = async (teamProfile) => {
 };
 
 const hasManagerPermsOfTeam = (managerTeam, teamProfile) => {
+  console.log(managerTeam, teamProfile);
   const managerAccessLevel = getDivisionPermsIntOfTeam(managerTeam);
   const teamAccessLevel = getDivisionPermsIntOfTeam(teamProfile);
 
