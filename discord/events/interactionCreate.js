@@ -2,6 +2,13 @@ const { MessageEmbed } = require("discord.js");
 const { Warning } = require("../utils/icons");
 const { BOT_ERROR_ID } = require("../config/channels");
 const { InvalidPermissionError } = require("../utils/errors");
+const {
+  ANNOUNCEMENT_ROLE_ID,
+  SCORES_ROLE_ID,
+  MEDIA_ROLE_ID,
+  MODERATOR_ROLE_ID,
+  DONATOR_ROLE_ID,
+} = require("../config/roles");
 
 const validateCommandChannels = (interaction, allowedChannels) => {
   if (allowedChannels.length === 0) return true;
@@ -17,6 +24,30 @@ const validateCommandChannels = (interaction, allowedChannels) => {
     );
 };
 
+const roleMap = new Map([
+  ["announcement", ANNOUNCEMENT_ROLE_ID],
+  ["media", MEDIA_ROLE_ID],
+  ["scores", SCORES_ROLE_ID],
+]);
+
+const addRole = (interaction, roleName) => {
+  const discordMember = interaction.member;
+
+  const roleToGive = roleMap.get(roleName);
+
+  if (!roleToGive) return;
+
+  const hasRole = discordMember.roles.cache.some(
+    (role) => role.id == roleToGive
+  );
+
+  if (hasRole) {
+    discordMember.roles.remove(roleToGive);
+  } else {
+    discordMember.roles.add(roleToGive);
+  }
+};
+
 const buttonInteractions = new Map([
   [
     "cancel",
@@ -30,6 +61,22 @@ const buttonInteractions = new Map([
           embeds: [cancelEmbed],
           components: [],
         });
+      },
+    },
+  ],
+  [
+    "announcement",
+    {
+      async execute(interaction) {
+        addRole(interaction, "announcement");
+      },
+    },
+  ],
+  [
+    "media",
+    {
+      async execute(interaction) {
+        addRole(interaction, "media");
       },
     },
   ],
@@ -53,6 +100,7 @@ const handleCommand = async (interaction) => {
           .setTitle(error.name)
           .setDescription(error.getMessage());
       } else {
+        console.log("ERROR IN INTERACTION CREATE");
         console.log(error);
         interaction.client.channels.cache.get(BOT_ERROR_ID).send({
           content: error.message,
@@ -89,6 +137,7 @@ module.exports = {
     if (interaction.isButton()) {
       const button = buttonInteractions.get(customId);
       if (!button) return;
+      interaction.deferUpdate();
       button.execute(interaction);
     }
   },

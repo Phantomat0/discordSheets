@@ -1,10 +1,11 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { TICKETS_ID, MOD_LOG_ID } = require("../config/channels");
+const { ADMIN_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
 const subCommandsMap = require("./subcommands/tickets-sub");
 
 module.exports = {
-  allowedRoles: [],
+  allowedRoles: [ADMIN_ROLE_ID],
   allowedChannels: [TICKETS_ID],
   data: new SlashCommandBuilder()
     .setName("ticket")
@@ -72,6 +73,8 @@ module.exports = {
     if (!command)
       throw new CommandError("Invalid Command", "That Command does not exist");
 
+    console.log("YUP");
+
     await command(interaction);
 
     const successEmbed = successEmbedCreator(
@@ -79,7 +82,7 @@ module.exports = {
       `You will be notified of a response to your ticket in <#${MOD_LOG_ID}>`
     );
 
-    interaction.editReply({
+    await interaction.editReply({
       embeds: [successEmbed],
     });
 

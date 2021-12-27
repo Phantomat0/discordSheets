@@ -86,7 +86,7 @@ class BanAppealManager {
       ephemeral: true,
     });
 
-    const thread = await this.buttonInteraction.channel.threads.create({
+    const thread = await this.ticketInteraction.channel.threads.create({
       name: "ban appeal",
       type: "GUILD_PRIVATE_THREAD",
       autoArchiveDuration: 1440,
@@ -114,9 +114,13 @@ class BanAppealManager {
     });
 
     const deleteButtonCollector = thread.createMessageComponentCollector({
-      filter: (i) =>
-        i.user.id === this.buttonInteraction.user.id &&
-        i.customId === "deleteThread",
+      filter: (i) => {
+        i.deferUpdate();
+        return (
+          i.user.id === this.buttonInteraction.user.id &&
+          i.customId === "deleteThread"
+        );
+      },
       componentType: "BUTTON",
       max: 1,
     });
@@ -181,7 +185,7 @@ async function appealCmd(interaction) {
   };
 
   const appealEmbed = new MessageEmbed()
-    .setColor("#2F3136")
+    .setColor("#5DADEC")
     .setTitle("Ban Appeal")
     .setDescription(
       `**User**: <@${interaction.user.id}>\n**Name**: ${playerNameOption}\n**Room**: ${roomOption}\n**Reason**: ${banReason}\n**Appeal**\n${appealOption}`
@@ -216,11 +220,11 @@ async function appealCmd(interaction) {
 
   const buttonCollector =
     ticketLogMessage.channel.createMessageComponentCollector({
-      filter: (i) => true,
       componentType: "BUTTON",
     });
 
   buttonCollector.on("collect", async (i) => {
+    // await i.deferUpdate();
     new BanAppealManager(
       interaction,
       i,
@@ -264,7 +268,6 @@ async function nicknameCmd(interaction) {
 
   const buttonCollector =
     ticketLogMessage.channel.createMessageComponentCollector({
-      filter: (i) => true,
       componentType: "BUTTON",
     });
 

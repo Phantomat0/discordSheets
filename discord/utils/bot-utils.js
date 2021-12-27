@@ -97,6 +97,30 @@ const sendMessageIfValidUser = async (
   }
 };
 
+async function validateMute(interaction, discordMember) {
+  // These roles cannot be muted
+  const SAFE_ROLES = ["Admin", "Moderator", "Bot"];
+
+  // Cant mute yourself
+  if (interaction.user.id === discordMember.user.id)
+    throw new CommandError("Invalid User", "You cannot mute yourself");
+
+  // Cant mute invalid user
+  if (!discordMember)
+    throw new CommandError(
+      "Invalid User",
+      "User does not exist in this Discord"
+    );
+
+  // Mute a Moderator or Admin
+  const attemptToMuteSafeRole = discordMember.roles.cache.some((role) =>
+    SAFE_ROLES.includes(role.name)
+  );
+
+  if (attemptToMuteSafeRole)
+    throw new CommandError("Invalid Mute", "User cannot be muted");
+}
+
 module.exports = {
   updateSignUpList,
   sendMessageIfValidUser,
@@ -105,4 +129,5 @@ module.exports = {
   sendInteractionTimedOut,
   addDiscordRole,
   removeDiscordRole,
+  validateMute,
 };

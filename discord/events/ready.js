@@ -7,8 +7,6 @@ const {
   SIGNUP_ID,
   TICKETS_ID,
 } = require("../config/channels");
-const { LOGO_URL } = require("../config/logo");
-const { GUILD_ID } = require("../config/config");
 const {
   ANNOUNCEMENT_ROLE_ID,
   SCORES_ROLE_ID,
@@ -16,6 +14,8 @@ const {
   MODERATOR_ROLE_ID,
   DONATOR_ROLE_ID,
 } = require("../config/roles");
+const { LOGO_URL } = require("../config/logo");
+const { GUILD_ID } = require("../config/config");
 const { CommandError } = require("../utils/errors");
 const {
   WavingHand,
@@ -298,7 +298,7 @@ async function sendInformation(client) {
     )
     .addField(
       "I was banned from one of the public rooms, how do I get unbanned?",
-      `Create a ban appeal ticket in <#895420435586482206> and patiently wait for a response in <#907811986740478004>`,
+      `Create a ban appeal ticket in <#923306571524624384> and patiently wait for a response in <#907811986740478004>`,
       false
     )
     .addField(
@@ -341,37 +341,37 @@ async function sendInformation(client) {
     components: [rolePings],
   });
 
-  const currentChannel = await client.channels.cache.get(INFORMATION_ID);
+  // const currentChannel = await client.channels.cache.get(INFORMATION_ID);
 
-  const collector = currentChannel.createMessageComponentCollector({
-    componentType: "BUTTON",
-  });
+  // const collector = currentChannel.createMessageComponentCollector({
+  //   componentType: "BUTTON",
+  // });
 
-  collector.on("collect", async (buttonInteraction) => {
-    const discordMember = buttonInteraction.member;
+  // collector.on("collect", async (buttonInteraction) => {
+  //   const discordMember = buttonInteraction.member;
 
-    const roleMap = new Map([
-      ["announcement", ANNOUNCEMENT_ROLE_ID],
-      ["media", MEDIA_ROLE_ID],
-      ["scores", SCORES_ROLE_ID],
-    ]);
+  //   const roleMap = new Map([
+  //     ["announcement", ANNOUNCEMENT_ROLE_ID],
+  //     ["media", MEDIA_ROLE_ID],
+  //     ["scores", SCORES_ROLE_ID],
+  //   ]);
 
-    const roleToGive = roleMap.get(buttonInteraction.customId);
+  //   const roleToGive = roleMap.get(buttonInteraction.customId);
 
-    if (!roleToGive) return;
+  //   if (!roleToGive) return;
 
-    const hasRole = discordMember.roles.cache.some(
-      (role) => role.id == roleToGive
-    );
+  //   const hasRole = discordMember.roles.cache.some(
+  //     (role) => role.id == roleToGive
+  //   );
 
-    if (hasRole) {
-      discordMember.roles.remove(roleToGive);
-    } else {
-      discordMember.roles.add(roleToGive);
-    }
+  //   if (hasRole) {
+  //     discordMember.roles.remove(roleToGive);
+  //   } else {
+  //     discordMember.roles.add(roleToGive);
+  //   }
 
-    buttonInteraction.deferUpdate();
-  });
+  //   buttonInteraction.deferUpdate();
+  // });
 }
 
 function sleep(ms) {
@@ -384,7 +384,7 @@ module.exports = {
   async execute(client) {
     console.log("Ready!");
 
-    deployCommandPermissions(client);
+    // deployCommandPermissions(client);
 
     // const dumbEmbed = new MessageEmbed()
     //   .setTitle("Registration")
@@ -403,9 +403,11 @@ module.exports = {
         "Use the **/register** command to begin the registration process. Fill out your name, position, availability, and info."
       );
 
-    await client.channels.cache.get(TICKETS_ID).send({
-      embeds: [ticketsEmbed],
-    });
+    // await client.channels.cache.get(TICKETS_ID).send({
+    //   embeds: [ticketsEmbed],
+    // });
+
+    // sendInformation(client);
 
     // await client.channels.cache.get(SIGNUP_ID).send({
     //   embeds: [dumbEmbed],
@@ -426,14 +428,6 @@ module.exports = {
     // });
 
     // startSixMan(client);
-
-    // while (true) {
-    //   await muteChecker(client);
-    //   // Check every five minutes
-    //   await sleep(300000);
-    // }
-
-    // sendInformation(client);
 
     // const signedUpPlayersEmbed = new MessageEmbed().setTitle("HEY!!!");
 
