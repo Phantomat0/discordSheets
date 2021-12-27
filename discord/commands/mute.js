@@ -4,40 +4,11 @@ const { MOD_LOG_ID } = require("../config/channels");
 const { CommandError } = require("../utils/errors");
 const { plural, getDateTimeString } = require("../utils/utils");
 const { Silence } = require("../utils/icons");
-const { MUTED_ROLE_ID, MODERATOR_ROLE_ID } = require("../config/roles");
+const { MODERATOR_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
-const mainDatabase = require("../../database/main/main");
-
-async function validateMute(interaction, discordMember) {
-  // These roles cannot be muted
-  const SAFE_ROLES = ["Admin", "Moderator", "Bot"];
-
-  // Cant mute yourself
-  if (interaction.user.id === discordMember.user.id)
-    throw new CommandError("Invalid User", "You cannot mute yourself");
-
-  // Cant mute invalid user
-  if (!discordMember)
-    throw new CommandError(
-      "Invalid User",
-      "User does not exist in this Discord"
-    );
-
-  // Mute a Moderator or Admin
-  const attemptToMuteSafeRole = discordMember.roles.cache.some((role) =>
-    SAFE_ROLES.includes(role.name)
-  );
-
-  if (attemptToMuteSafeRole)
-    throw new CommandError("Invalid Mute", "User cannot be muted");
-
-  // Mute someone who is already muted
-  const isMuted = discordMember.roles.cache.some(
-    (role) => role.name === "muted"
-  );
-
-  if (isMuted) throw new CommandError("Cannot Mute", "User is already muted");
-}
+const { validateMute } = require("../utils/bot-utils");
+const fetch = require("node-fetch");
+const ms = require("ms");
 
 const INFRACTIONS = {
   spam: {
@@ -104,26 +75,43 @@ module.exports = {
   async execute(interaction) {
     const { options } = interaction;
 
+    console.log(interaction);
+
     const discordMember = options.getMember("target-user");
     const infractionTypeOption = options.getString("infraction");
     const infoOption = options.getString("info");
 
-    await validateMute(interaction, discordMember);
-
-    discordMember.roles.add(MUTED_ROLE_ID);
-
     const infraction = INFRACTIONS[infractionTypeOption];
 
-    const successEmbed = successEmbedCreator(
-      "Successfully Muted!",
-      `<@${discordMember.user.id}> has been muted`
+    await validateMute(interaction, discordMember);
+
+    const infractionDurationMS = ms(`${infraction.duration}h`);
+
+    if (infractionDurationMS < 10000 || infractionDurationMS > 2419200000)
+      throw new CommandError("Invalid Time", "Invalid Mute Duration");
+
+    const iosTime = new Date(Date.now() + infractionDurationMS).toISOString();
+
+    await fetch(
+      `https://discord.com/api/guilds/${interaction.guildId}/members/${discordMember.user.id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ communication_disabled_until: iosTime }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bot ${interaction.client.token}`,
+        },
+      }
     );
 
-    const timeStamp = getDateTimeString();
+    const successEmbed = successEmbedCreator(
+      "Successfully Timed Out!",
+      `<@${discordMember.user.id}> has been timed out`
+    );
 
     const muteEmbed = new MessageEmbed()
       .setColor("RED")
-      .setTitle(`Mute`)
+      .setTitle(`Time out`)
       .setDescription(
         `**User:** <@${discordMember.user.id}>\n**Reason:** ${
           infraction.name
@@ -131,7 +119,9 @@ module.exports = {
           infraction.duration,
           "hour",
           "hours"
-        )}${infoOption ? `\n**Info:** ${infoOption}` : ""}\n\n*${timeStamp}*`
+        )}${
+          infoOption ? `\n**Info:** ${infoOption}` : ""
+        }\n\n*${getDateTimeString()}*`
       );
 
     await interaction.editReply({
@@ -145,28 +135,79 @@ module.exports = {
         embeds: [muteEmbed],
       });
 
-    mainDatabase.addUserToMuted({
-      muted_id: discordMember.user.id,
-      muted_name: discordMember.user.username,
-      muted_by_id: interaction.user.id,
-      muted_by_name: interaction.user.username,
-      time_of_mute: Date.now(),
-      reason: infraction.name,
-      duration: infraction.duration,
-      info: infoOption,
-      message_link: modLogMessage.url,
-    });
-
     const muteChannelEmbed = new MessageEmbed()
-      .setTitle(`${Silence} User has been muted`)
+      .setTitle(`${Silence} User has been timed out`)
       .setURL(modLogMessage.url)
       .setColor("RED")
       .setDescription(
-        `<@${discordMember.user.id}> was muted by <@${interaction.user.id}>`
+        `<@${discordMember.user.id}> was timed out by <@${interaction.user.id}>`
       );
 
     interaction.followUp({
       embeds: [muteChannelEmbed],
     });
+
+    // OLD MUTE
+
+    // await validateMute(interaction, discordMember);
+
+    // discordMember.roles.add(MUTED_ROLE_ID);
+
+    // const infraction = INFRACTIONS[infractionTypeOption];
+
+    // const successEmbed = successEmbedCreator(
+    //   "Successfully Muted!",
+    //   `<@${discordMember.user.id}> has been muted`
+    // );
+
+    // const timeStamp = getDateTimeString();
+
+    // const muteEmbed = new MessageEmbed()
+    //   .setColor("RED")
+    //   .setTitle(`Mute`)
+    //   .setDescription(
+    //     `**User:** <@${discordMember.user.id}>\n**Reason:** ${
+    //       infraction.name
+    //     }\n\n**By:** <@${interaction.user.id}>\n**Duration:** ${plural(
+    //       infraction.duration,
+    //       "hour",
+    //       "hours"
+    //     )}${infoOption ? `\n**Info:** ${infoOption}` : ""}\n\n*${timeStamp}*`
+    //   );
+
+    // await interaction.editReply({
+    //   embeds: [successEmbed],
+    // });
+
+    // const modLogMessage = await interaction.client.channels.cache
+    //   .get(MOD_LOG_ID)
+    //   .send({
+    //     content: `<@${discordMember.user.id}>`,
+    //     embeds: [muteEmbed],
+    //   });
+
+    // mainDatabase.addUserToMuted({
+    //   muted_id: discordMember.user.id,
+    //   muted_name: discordMember.user.username,
+    //   muted_by_id: interaction.user.id,
+    //   muted_by_name: interaction.user.username,
+    //   time_of_mute: Date.now(),
+    //   reason: infraction.name,
+    //   duration: infraction.duration,
+    //   info: infoOption,
+    //   message_link: modLogMessage.url,
+    // });
+
+    // const muteChannelEmbed = new MessageEmbed()
+    //   .setTitle(`${Silence} User has been muted`)
+    //   .setURL(modLogMessage.url)
+    //   .setColor("RED")
+    //   .setDescription(
+    //     `<@${discordMember.user.id}> was muted by <@${interaction.user.id}>`
+    //   );
+
+    // interaction.followUp({
+    //   embeds: [muteChannelEmbed],
+    // });
   },
 };
