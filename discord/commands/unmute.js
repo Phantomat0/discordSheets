@@ -4,7 +4,6 @@ const { MOD_LOG_ID } = require("../config/channels");
 const { getDateTimeString } = require("../utils/utils");
 const { MODERATOR_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
-const fetch = require("node-fetch");
 const { validateMute } = require("../utils/bot-utils");
 
 module.exports = {
@@ -24,17 +23,7 @@ module.exports = {
 
     await validateMute(interaction, discordMember);
 
-    await fetch(
-      `https://discord.com/api/guilds/${interaction.guildId}/members/${discordMember.user.id}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ communication_disabled_until: null }),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bot ${interaction.client.token}`,
-        },
-      }
-    );
+    await discordMember.timeout(null);
 
     const successEmbed = successEmbedCreator(
       "Successfully unmuted!",

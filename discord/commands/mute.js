@@ -7,7 +7,6 @@ const { Silence } = require("../utils/icons");
 const { MODERATOR_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
 const { validateMute } = require("../utils/bot-utils");
-const fetch = require("node-fetch");
 const ms = require("ms");
 
 const INFRACTIONS = {
@@ -75,9 +74,8 @@ module.exports = {
   async execute(interaction) {
     const { options } = interaction;
 
-    console.log(interaction);
-
     const discordMember = options.getMember("target-user");
+
     const infractionTypeOption = options.getString("infraction");
     const infoOption = options.getString("info");
 
@@ -85,24 +83,13 @@ module.exports = {
 
     await validateMute(interaction, discordMember);
 
-    const infractionDurationMS = ms(`${infraction.duration}h`);
+    const timeOutDurationInMs = ms(infraction.duration);
 
-    if (infractionDurationMS < 10000 || infractionDurationMS > 2419200000)
+    // Invalid Times
+    if (timeOutDurationInMs < 10000 || timeOutDurationInMs > 2419200000)
       throw new CommandError("Invalid Time", "Invalid Mute Duration");
 
-    const iosTime = new Date(Date.now() + infractionDurationMS).toISOString();
-
-    await fetch(
-      `https://discord.com/api/guilds/${interaction.guildId}/members/${discordMember.user.id}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ communication_disabled_until: iosTime }),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bot ${interaction.client.token}`,
-        },
-      }
-    );
+    await discordMember.timeout(timeOutDurationInMs, infoOption);
 
     const successEmbed = successEmbedCreator(
       "Successfully Timed Out!",
