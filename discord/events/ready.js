@@ -7,13 +7,7 @@ const {
   SIGNUP_ID,
   TICKETS_ID,
 } = require("../config/channels");
-const {
-  ANNOUNCEMENT_ROLE_ID,
-  SCORES_ROLE_ID,
-  MEDIA_ROLE_ID,
-  MODERATOR_ROLE_ID,
-  DONATOR_ROLE_ID,
-} = require("../config/roles");
+const { MODERATOR_ROLE_ID, DONATOR_ROLE_ID } = require("../config/roles");
 const { LOGO_URL } = require("../config/logo");
 const { GUILD_ID } = require("../config/config");
 const { CommandError } = require("../utils/errors");
@@ -26,6 +20,7 @@ const {
   MoneyBag,
   Abascus,
   Ballot,
+  OrangeBook,
 } = require("../utils/icons");
 const { getCancelAndConfirmButtonRow } = require("../utils/buttons");
 const { successEmbedCreator } = require("../utils/embeds");
@@ -188,12 +183,53 @@ async function sendInformation(client) {
     new MessageButton()
       .setCustomId("media")
       .setLabel("Media")
-      .setStyle("PRIMARY"),
-    new MessageButton()
-      .setCustomId("scores")
-      .setLabel("Scores")
       .setStyle("PRIMARY")
+    // new MessageButton()
+    //   .setCustomId("scores")
+    //   .setLabel("Scores")
+    //   .setStyle("PRIMARY")
   );
+
+  const gameRulesStr = [
+    "**4v4 only**, no 3v3, no 3v4",
+    "Games consist of two **7**-minute halves.",
+    "No Draws, should the game be tied after 14 minutes of play, **7**-minute overtime periods will be played, until a winner is decided. No golden goal",
+    "Games are declared a forfeit should a team be unable to field **4** players, **15** minutes after the scheduled game time.",
+    "Players must verify using and only using the official verification system for our league, with no exceptions given.",
+  ]
+    .map((rule) => `${SmallWhiteSquare} ${rule}`)
+    .join("\n\n");
+
+  const teamRulesStr = [
+    "Teams have divisional affiliates, with players having the ability to be called up to play in games in higher divisions",
+    "Roster Limits:\nDivision 1: 6\nDivison 2: 6\nDivison 3: 8",
+  ]
+    .map((rule) => `${SmallWhiteSquare} ${rule}`)
+    .join("\n\n");
+
+  const PlayerRulesStr = [
+    "Players who sign up after the draft must first undergo a waiver process in order to be signed, where teams have the ability to place claims on players",
+    "Waivers run every Tuesday at **10PM EST**. Players must have been signed up for at least 24 hours before they can be considered for the weekly waiver run.",
+    "Should a player go through the waiver process without being claimed, they are moved to Free Agency, where they may be signed at anytime, on a first come first serve basis.",
+    "Should a D1 or D2 player be released from their team, specific limitations prevent them from being instantly signed to a lower division. These limitations are staying are processing waivers, and a 24 hour D3 sign restriction respectively.",
+  ]
+    .map((rule) => `${SmallWhiteSquare} ${rule}`)
+    .join("\n\n");
+
+  const ruleBookEmbed = new MessageEmbed()
+    .setTitle("Rules Overview")
+    .setColor("#fd7e14")
+    .setDescription(
+      `**:small_orange_diamond: Game**\n\n${gameRulesStr}\n\n**:small_orange_diamond: Teams**\n\n${teamRulesStr}\n\n**:small_orange_diamond: Free Agency**\n\n${PlayerRulesStr}`
+    );
+
+  const rulebookLinkEmbed = new MessageEmbed()
+    .setTitle(`${OrangeBook}  AF Official Rulebook`)
+    .setURL("https://discord.js.org/")
+    .setColor("#fd7e14")
+    .setDescription(
+      "View the official rulebook document by visiting the link above, which includes outlines more specific rules and procedures for various league events."
+    );
 
   const welcomeEmbed = new MessageEmbed()
     .setAuthor(
@@ -204,26 +240,21 @@ async function sendInformation(client) {
     .setTitle(`${WavingHand}  Welcome to American Futsal!`)
     .setColor("#FF0055")
     .setDescription(
-      `North America's most profound futsal league!\n\nWe are a competitive 4v4 haxball league with three divisions and biweekly games.\n A little more about us:\n\n ${SmallWhiteSquare} Draft style league, managers choose players to sign\n${SmallWhiteSquare} Three divisions with affiliation\n${SmallWhiteSquare} Champion declared at the end of every season for each division\n${SmallWhiteSquare} Weekly games, no reschedules unless mutually agreed upon\n${SmallWhiteSquare} Haxball's best antifake, Haxball and Discord authentication\n${SmallWhiteSquare} Seasonal fun tournaments in other modes`
+      `North America's most profound futsal league!\n\nWe are a competitive 4v4 haxball league with three divisions and biweekly games.\n A little more about us:\n\n ${SmallWhiteSquare} Draft style league, managers choose players to sign\n${SmallWhiteSquare} Three divisions with affiliation\n${SmallWhiteSquare} Champion declared at the end of every season for each division\n${SmallWhiteSquare} Weekly games, no reschedules unless mutually agreed upon\n${SmallWhiteSquare} Haxball's best antifake, Haxball and Discord authentication\n${SmallWhiteSquare} Seasonal fun tournaments in other modes\n\nView more about our league structure in <#>`
     );
 
   const rulesArray = [
-    "Spam",
-    "Offensive nicknames",
-    "Excessive mentioning of users and roles",
-    "Links to dangerous or explicit websites",
-    "Sexually explicit content",
-    "Hate speech or racial slurs",
-    "Images of gore and/or animal cruelty",
-    "Harassment",
-    "Advertising of other servers or websites",
-    "Dox attempts or threats",
-    "Threats of violence",
+    `**Do not** post spam. No content such as, but not limited to: discord invite links/qr codes, videos, images, advertising services, surveys, referral links of any and all kinds.`,
+    `**Do not** bypass our filters, disrupt voice/text chat, impersonate users, claim to be any kind of moderator, engage in hate speech about other members.`,
+    `**Do not** post content that is abusive, threatening, defamatory, racist, sexual, religious, relates to self-harm or is otherwise objectionable/offensive. Moderators also reserve the right to remove anything considered to be edgy or baiting.`,
+    `Usernames, status messages and avatars must be appropriate. They should not be Blank names, Zalgo, impersonating, advertising, overly lengthy names, slurs, or any other offensive material.`,
+    `Only one Discord account per person in the server at any time unless given direct authorization from an Admin.`,
   ];
 
   const rulesStr = rulesArray
-    .map((rule) => `${SmallWhiteSquare} ${rule}`)
+    .map((rule) => `:small_blue_diamond: ${rule}`)
     .join("\n\n");
+
   await client.guilds.cache.get(GUILD_ID).members.fetch();
 
   const moderatorsIdArray = await client.guilds.cache
@@ -258,14 +289,14 @@ async function sendInformation(client) {
     .setTitle(`${Abascus}  Staff`)
     .setColor("#3F9630")
     .setDescription(
-      `Want a clarification on rules? Want to report in game rule breaking? Contact an Admin.\n\nWant to report misconduct in the Discord, feel uncomortable or threatned, or just need any Discord help? Contact the moderator team and let them know.\n\n**Staff**\n${adminListStr}\n\n**Moderators**\n${moderatorListStr}`
+      `Want a clarification on rules? Want to report in game rule breaking? Contact an Admin.\n\nEncounter something that you think require moderator intervention, or just need any Discord help? Contact the moderator team and let them know.\n\n**Staff**\n${adminListStr}\n\n**Moderators**\n${moderatorListStr}`
     );
 
   const rulesEmbed = new MessageEmbed()
-    .setTitle(`${PageCurled} Rules`)
-    .setColor("#D9DBDA")
+    .setTitle(`${PageCurled}  Server Rules`)
+    .setColor("#3B88C3")
     .setDescription(
-      `${rulesStr}\n\nWe take the listed rules very seriously. We are committed in ensuring a welcoming and non-toxic environment for our members. A mute will be your first warning for an offense, subsequent offenses will be handled accordingly with further mutes and suspensions. `
+      `${rulesStr}\n\n:warning: This list does not constitute the full set of rules, and our Moderators may take action on misbehavior and violations that are not explicitly listed below. At all times, use common sense and good judgement for any action you're about to take\n\n:information_source: Our server rules are in addition to Discord's [terms of service](https://discord.com/terms 'Discord terms of service') and [community guidelines](https://discord.com/guidelines 'community guidelines').\n\n We take the listed rules very seriously. We are committed in ensuring a welcoming and non-toxic environment for our members. A mute will be your first warning for an offense, subsequent offenses will be handled accordingly with further mutes and suspensions. `
     );
 
   const faqEmbed = new MessageEmbed()
@@ -341,6 +372,10 @@ async function sendInformation(client) {
     components: [rolePings],
   });
 
+  // await client.channels.cache.get(INFORMATION_ID).send({
+  //   embeds: [rulebookLinkEmbed, ruleBookEmbed],
+  // });
+
   // const currentChannel = await client.channels.cache.get(INFORMATION_ID);
 
   // const collector = currentChannel.createMessageComponentCollector({
@@ -397,7 +432,7 @@ module.exports = {
         `Use this channel to submit support tickets. To submit a ticket, use the **/ticket** command with any of the following options below and fill out the form.\n\n**ban-appeal** For public room ban appeals`
       );
 
-    const awardsEmbed = new MessageEmbed()
+    const awardsEmbed1 = new MessageEmbed()
       .setTitle("Registration")
       .setDescription(
         "Use the **/register** command to begin the registration process. Fill out your name, position, availability, and info."
@@ -407,7 +442,7 @@ module.exports = {
     //   embeds: [ticketsEmbed],
     // });
 
-    // sendInformation(client);
+    sendInformation(client);
 
     // await client.channels.cache.get(SIGNUP_ID).send({
     //   embeds: [dumbEmbed],
@@ -417,15 +452,15 @@ module.exports = {
     //   embeds: [awardsEmbed],
     // });
 
-    // const awardsEmbed = new MessageEmbed()
-    //   .setTitle("Season 1 Playoffs Best Player")
-    //   .setDescription(
-    //     "Vote for awards in this channel using the **/awards** command. Some rules: \nYou must have been registered for the current season in order to be eligible to vote.\nOnly one vote per division\nYou must place a vote for each award\nPrimary and Secondary options for Best Player cannot be the same\n**Award Voting closes November 23rd 10:59PM EST**"
-    //   );
+    const awardsEmbed = new MessageEmbed()
+      .setTitle("Season 2 Awards")
+      .setDescription(
+        "Vote for awards in this channel using the **/awards** command. Some rules: \nYou must have been registered for the current season in order to be eligible to vote.\nOnly one vote per division\nYou must place a vote for each award\nPrimary and Secondary options for Best Player cannot be the same\n**Award Voting closes January 11th 10:59PM EST**"
+      );
 
-    // await client.channels.cache.get("915730689104703528").send({
-    //   embeds: [awardsEmbed],
-    // });
+    await client.channels.cache.get("929485179481890816").send({
+      embeds: [awardsEmbed],
+    });
 
     // startSixMan(client);
 

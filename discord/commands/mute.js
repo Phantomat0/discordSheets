@@ -7,7 +7,6 @@ const { Silence } = require("../utils/icons");
 const { MODERATOR_ROLE_ID } = require("../config/roles");
 const { successEmbedCreator } = require("../utils/embeds");
 const { validateMute } = require("../utils/bot-utils");
-const ms = require("ms");
 
 const INFRACTIONS = {
   spam: {
@@ -83,13 +82,15 @@ module.exports = {
 
     await validateMute(interaction, discordMember);
 
-    const timeOutDurationInMs = ms(infraction.duration);
+    const timeOutDurationInMs = infraction.duration * 60000 * 60;
 
     // Invalid Times
     if (timeOutDurationInMs < 10000 || timeOutDurationInMs > 2419200000)
       throw new CommandError("Invalid Time", "Invalid Mute Duration");
 
-    await discordMember.timeout(timeOutDurationInMs, infoOption);
+    console.log(timeOutDurationInMs);
+
+    await discordMember.timeout(timeOutDurationInMs);
 
     const successEmbed = successEmbedCreator(
       "Successfully Timed Out!",

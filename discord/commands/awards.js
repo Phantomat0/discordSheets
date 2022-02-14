@@ -4,34 +4,123 @@ const { CommandError, InvalidPermissionError } = require("../utils/errors");
 const mainDatabase = require("../../database/main/main");
 const { successEmbedCreator } = require("../utils/embeds");
 
-const BEST_PLAYERS_D1 = [
-  ["abe", "abe"],
-  ["Bek", "bek"],
-  ["DiMiliano", "dimiliano"],
-  ["dread", "dread"],
-  ["El JeFe", "el-jefe"],
-  ["father", "father"],
-  ["is it xmas yet?", "is-it-xmas-yet"],
-  ["jay", "jay"],
+const ST_PLAYERS_D1 = [
+  ["bennett", "bennett"],
+  ["bronny", "bronny"],
+  ["cargo", "cargo"],
+  ["Dimiliano", "dimiliano"],
+  ["EasyBruh", "EasyBruh"],
   ["kermit", "kermit"],
-  ["Shott", "shott"],
+  ["Levaldo", "levaldo"],
+  ["question", "question"],
+  ["salah", "salah"],
+];
+
+const AM_PLAYERS_D1 = [
+  ["abe", "abe"],
+  ["Kl", "Kl"],
+  ["soapy", "soapy"],
+];
+
+const DM_PLAYERS_D1 = [
+  ["Dime", "dime"],
+  ["father", "father"],
+  ["Game Awn", "Game Awn"],
+  ["Matt", "matt"],
+  ["sw1zy", "sw1zy"],
+  ["tda", "tda"],
+];
+
+const GK_PLAYERS_D1 = [
+  ["Brian", "brian"],
+  ["Firder", "firder"],
+  ["pakito", "pakito"],
+  ["silva", "silva"],
   ["sixer", "sixer"],
-  ["TDA", "tda"],
+  ["sqai", "sqai"],
+  ["is it xmas yet?", "xmas"],
+  ["zippy", "zippy"],
+];
+
+const ST_PLAYERS_D2 = [
+  ["Agent", "agent"],
+  ["anak", "anak"],
+  ["archie", "archie"],
+  ["bronny", "bronny"],
+  ["cargo", "cargo"],
+  ["EasyBruh", "easybruh"],
+  ["lets dye this world", "lets"],
+  ["salah", "salah"],
+  ["salina", "salina"],
+];
+
+const AM_PLAYERS_D2 = [
+  ["Firder", "firder"],
+  ["Gerardosky", "gerardosky"],
+  ["nik", "nik"],
+  ["question", "question"],
+  ["sqai", "sqai"],
+  ["Suzuki", "Suzuki"],
+];
+
+const DM_PLAYERS_D2 = [
+  ["Dani", "dani"],
+  ["Dazai", "dazai"],
+  ["ellio12", "ellio"],
+  ["Faraone", "faraone"],
+  ["Matt", "matt"],
+  ["ceedee lamb", "pennutoh"],
+];
+
+const GK_PLAYERS_D2 = [
+  ["ABECE", "abece"],
+  ["Aoi", "aoi"],
+  ["Ben Bishop", "ben bishop"],
+  ["BOBBA", "bobba"],
+  ["Brian", "brian"],
+  ["darksqde", "darksqde"],
+  ["EasyBruh", "easyBruh"],
+  ["hashem", "hashem"],
+  ["silva", "silva"],
+  ["Tyler Herro", "tyler herro"],
+  ["zippy", "zippy"],
+];
+
+const BEST_PLAYERS_D1 = [
+  ["bennett", "bennett"],
+  ["Dimiliano", "dimiliano"],
+  ["Kl", "kl"],
+  ["Matt", "matt"],
+  ["sixer", "sixer"],
+  ["sw1zy", "sw1zy"],
+  ["is it xmas yet?", "xmas"],
 ];
 
 const BEST_PLAYERS_D2 = [
   ["Brian", "brian"],
   ["bronny", "bronny"],
   ["cargo", "cargo"],
-  ["dread", "dread"],
-  ["Matt", "matt"],
-  ["nik", "nik"],
-  ["nvg", "nvg"],
-  ["OMG RONNY", "ronny"],
+  ["Dani", "dani"],
+  ["Gerardosky", "gerardosky"],
+  ["lets dye this world", "lets"],
+  ["question", "question"],
   ["salah", "salah"],
-  ["silva", "silva"],
-  ["SK1NNY", "sk1nny"],
-  ["Suzuki", "Suzuki"],
+  ["Suzuki", "suzuki"],
+  ["Tyler Herro", "tyler herro"],
+];
+
+const BEST_PLAYERS_D3 = [
+  ["Agent", "agent"],
+  ["Apathy", "apathy"],
+  ["Ben Bishop", "ben bishop"],
+  ["darksqde", "darksqde"],
+  ["EasyBruh", "easybruh"],
+  ["harry kane", "harry kane"],
+  ["hashem", "hashem"],
+  ["Incital", "incital"],
+  ["ratchet", "ratchet"],
+  ["Raz", "raz"],
+  ["richy", "richy"],
 ];
 
 module.exports = {
@@ -39,7 +128,7 @@ module.exports = {
   allowedChannels: [AWARD_VOTING_ID],
   data: new SlashCommandBuilder()
     .setName("awards")
-    .setDescription("Vote for Season 1 Awards")
+    .setDescription("Vote for Season 2 Awards")
     .addSubcommand((subcommand) =>
       subcommand
         .setName("division_1")
@@ -48,61 +137,63 @@ module.exports = {
           option
             .setRequired(true)
             .setName("best_player_1")
-            .setDescription("Best Player in Playoffs");
+            .setDescription("Best Player Primary Pick");
           BEST_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
           return option;
         })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_player_2")
+            .setDescription("Best Player Secondary Pick");
+          BEST_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_striker")
+            .setDescription("Best Striker");
+          ST_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_attacking_mid")
+            .setDescription("Best Attacking Mid");
+          AM_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_defensive_mid")
+            .setDescription("Best Defensive Mid");
+          DM_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_goalkeeper")
+            .setDescription("Best Goalkeeper");
+          GK_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) =>
+          option
+            .setRequired(true)
+            .setName("best_manager")
+            .setDescription("Best Manager")
+            .addChoice("Brian", "brian")
+            .addChoice("DiMiliano", "dimiliano")
+            .addChoice("Matt", "matt")
+            .addChoice("sixer", "sixer")
+            .addChoice("sqai", "sqai")
+            .addChoice("zippy", "zippy")
+        )
     )
-    //     .addStringOption((option) => {
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_player_2")
-    //         .setDescription("Best Player Secondary Pick");
-    //       BEST_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
-    //       return option;
-    //     })
-    //     .addStringOption((option) => {
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_striker")
-    //         .setDescription("Best Striker");
-    //       ST_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
-    //       return option;
-    //     })
-    //     .addStringOption((option) => {
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_attacking_mid")
-    //         .setDescription("Best Attacking Mid");
-    //       AM_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
-    //       return option;
-    //     })
-    //     .addStringOption((option) => {
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_defensive_mid")
-    //         .setDescription("Best Defensive Mid");
-    //       DM_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
-    //       return option;
-    //     })
-    //     .addStringOption((option) => {
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_goalkeeper")
-    //         .setDescription("Best Goalkeeper");
-    //       GK_PLAYERS_D1.forEach(([name, id]) => option.addChoice(name, id));
-    //       return option;
-    //     })
-    //     .addStringOption((option) =>
-    //       option
-    //         .setRequired(true)
-    //         .setName("best_manager")
-    //         .setDescription("Best General Manager")
-    //         .addChoice("DiMiliano", "dimiliano")
-    //         .addChoice("Shott", "shott")
-    //         .addChoice("TDA", "tda")
-    //     )
-    // )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("division_2")
@@ -111,52 +202,72 @@ module.exports = {
           option
             .setRequired(true)
             .setName("best_player_1")
-            .setDescription("Best Player in Playoffs");
+            .setDescription("Best Player Primary Pick");
           BEST_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
           return option;
         })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_player_2")
+            .setDescription("Best Player Secondary Pick");
+          BEST_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_striker")
+            .setDescription("Best Striker");
+          ST_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_attacking_mid")
+            .setDescription("Best Attacking Mid");
+          AM_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_defensive_mid")
+            .setDescription("Best Defensive Mid");
+          DM_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_goalkeeper")
+            .setDescription("Best Goalkeeper");
+          GK_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("division_3")
+        .setDescription("Division 3")
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_player_1")
+            .setDescription("Best Player Primary Pick");
+          BEST_PLAYERS_D3.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
+        .addStringOption((option) => {
+          option
+            .setRequired(true)
+            .setName("best_player_2")
+            .setDescription("Best Player Secondary Pick");
+          BEST_PLAYERS_D3.forEach(([name, id]) => option.addChoice(name, id));
+          return option;
+        })
     ),
-  //     .addStringOption((option) => {
-  //       option
-  //         .setRequired(true)
-  //         .setName("best_player_2")
-  //         .setDescription("Best Player Secondary Pick");
-  //       BEST_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
-  //       return option;
-  //     })
-  //     .addStringOption((option) => {
-  //       option
-  //         .setRequired(true)
-  //         .setName("best_striker")
-  //         .setDescription("Best Striker");
-  //       ST_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
-  //       return option;
-  //     })
-  //     .addStringOption((option) => {
-  //       option
-  //         .setRequired(true)
-  //         .setName("best_attacking_mid")
-  //         .setDescription("Best Attacking Mid");
-  //       AM_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
-  //       return option;
-  //     })
-  //     .addStringOption((option) => {
-  //       option
-  //         .setRequired(true)
-  //         .setName("best_defensive_mid")
-  //         .setDescription("Best Defensive Mid");
-  //       DM_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
-  //       return option;
-  //     })
-  //     .addStringOption((option) => {
-  //       option
-  //         .setRequired(true)
-  //         .setName("best_goalkeeper")
-  //         .setDescription("Best Goalkeeper");
-  //       GK_PLAYERS_D2.forEach(([name, id]) => option.addChoice(name, id));
-  //       return option;
-  //     })
-  // ),
 
   async execute(interaction) {
     const subCommandName = interaction.options.getSubcommand();
@@ -203,27 +314,30 @@ function processVotes(divison, options, voterID, voterName) {
   const bestPlayerOneOption = options.getString("best_player_1") ?? null;
   const bestPlayerTwoOption = options.getString("best_player_2") ?? null;
 
-  const voteArray1 =
-    divison === "divison_1"
-      ? [voterID, voterName, bestPlayerOneOption]
-      : [voterID, voterName, bestPlayerTwoOption];
+  if (bestPlayerOneOption === bestPlayerTwoOption)
+    throw new CommandError(
+      "Invalid selection",
+      "Primary and Secondary selections for Best Player cannot be the same"
+    );
 
-  mainDatabase.processAwardVotes(divison, voteArray1);
+  if (divison === "divison_3") {
+    const voteArray = [
+      voterID,
+      voterName,
+      bestPlayerOneOption,
+      bestPlayerTwoOption,
+    ];
 
-  return;
+    mainDatabase.processAwardVotes(divison, voteArray);
+
+    return;
+  }
+
   const getVoteArray = () => {
-    const bestPlayerOneOption = options.getString("best_player_1");
-    const bestPlayerTwoOption = options.getString("best_player_2");
     const bestSTOption = options.getString("best_striker");
     const bestAMOption = options.getString("best_attacking_mid");
     const bestDMOption = options.getString("best_defensive_mid");
     const bestGKOption = options.getString("best_goalkeeper");
-
-    if (bestPlayerOneOption === bestPlayerTwoOption)
-      throw new CommandError(
-        "Invalid selection,",
-        "Primary and Secondary selections for Best Player cannot be the same"
-      );
 
     const voteArray = [
       voterID,

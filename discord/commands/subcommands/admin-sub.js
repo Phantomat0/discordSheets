@@ -581,7 +581,10 @@ async function tradeCmd(interaction) {
           playerIDsArray.forEach(async (playerID) => {
             const playerProfile = PlayerManager.getPlayer(playerID);
 
-            const playerTeam = TeamsManager.getTeam(playerProfile.team_id);
+            console.log(playerProfile);
+            const playerTeam = TeamsManager.getTeam(
+              playerProfile.current_team_id
+            );
 
             sendMessageIfValidUser(interaction, playerProfile.discord_id, {
               embeds: [tradeDMEmbed],

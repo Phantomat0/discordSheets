@@ -67,6 +67,7 @@ const ICONS = {
   Abascus: String.fromCodePoint(0x1f9ee),
   Silence: String.fromCodePoint(0x1f92b),
   Ballot: String.fromCodePoint(0x1f5f3),
+  OrangeBook: String.fromCodePoint(0x1f4d9),
 };
 
 module.exports = ICONS;

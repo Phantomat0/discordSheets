@@ -56,6 +56,10 @@ const SHEET_TABLES = {
     name: "awards_d2",
     range: "awards_d2!A1:H",
   },
+  D3_AWARDS: {
+    name: "awards_d3",
+    range: "awards_d3!A1:H",
+  },
   TEST: {
     name: "stuff",
     range: "stuff!A1:B",
@@ -474,11 +478,18 @@ class MasterSheetManager {
     // });
   }
 
+  _getDivisionSheet(sheetStr) {
+    const divisions = new Map([
+      ["division_1", this._sheetTables.D1_AWARDS],
+      ["division_2", this._sheetTables.D2_AWARDS],
+      ["division_3", this._sheetTables.D3_AWARDS],
+    ]);
+
+    return divisions.get(sheetStr);
+  }
+
   async checkIfVoted(divison, playerID) {
-    const sheet =
-      divison === "division_1"
-        ? this._sheetTables.D1_AWARDS
-        : this._sheetTables.D2_AWARDS;
+    const sheet = this._getDivisionSheet(divison);
 
     const awards = await this._sheet.listMany(sheet);
 
@@ -486,10 +497,7 @@ class MasterSheetManager {
   }
 
   async processAwardVotes(divison, voteArray) {
-    const sheet =
-      divison === "division_1"
-        ? this._sheetTables.D1_AWARDS
-        : this._sheetTables.D2_AWARDS;
+    const sheet = this._getDivisionSheet(divison);
     this._sheet.write(sheet, voteArray);
   }
 
